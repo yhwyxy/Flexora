@@ -22,11 +22,12 @@ struct FlexoraApp: App {
 
     private static func makeModel() -> AppModel {
         let runtime = ModuleRuntime()
+        let workflowStore = WorkflowStore()
         let videoModule = VideoFrameExtractionModule()
 
         runtime.register(module: videoModule)
         runtime.setModuleEnabled(videoModule.descriptor.id, isEnabled: true)
 
-        return AppModel(runtime: runtime)
+        return AppModel(runtime: runtime, workflowStore: workflowStore, route: .home)
     }
 }

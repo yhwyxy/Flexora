@@ -5,79 +5,38 @@ struct MainWindowView: View {
 
     var body: some View {
         NavigationSplitView {
-            List {
-                Button("Home") {
-                    model.showHome()
-                }
-                .buttonStyle(.plain)
-
-                Button("Workshop") {
-                    model.showWorkshop()
-                }
-                .buttonStyle(.plain)
-
-                Button("Modules") {
-                    model.showModules()
-                }
-                .buttonStyle(.plain)
-            }
-            .navigationTitle("Flexora")
+            AppSidebarView(model: model)
         } detail: {
             switch model.route {
             case .home:
-                placeholderView(
-                    title: "Home",
-                    systemImage: "house",
-                    description: "Home workflow navigation is not implemented yet."
-                )
+                HomeView(model: model)
             case .workshop:
-                placeholderView(
+                shellPlaceholder(
                     title: "Workshop",
                     systemImage: "hammer",
-                    description: "Workshop workflow navigation is not implemented yet."
+                    description: "Workshop tools land here in a later task."
                 )
             case .modules:
-                ModuleSelectionView(model: model)
+                ModuleLibraryView(model: model)
             case let .task(workflowID):
-                taskView(for: workflowID)
+                shellPlaceholder(
+                    title: "Task",
+                    systemImage: "checklist",
+                    description: "Workflow \(workflowID) will open in the task surface in a later task."
+                )
             case let .workflowEditor(workflowID):
-                placeholderView(
+                shellPlaceholder(
                     title: "Workflow Editor",
                     systemImage: "square.and.pencil",
-                    description: "Editing \(workflowID) is not implemented yet."
+                    description: "Editing \(workflowID) arrives in a later task."
                 )
             }
         }
         .navigationSplitViewStyle(.balanced)
     }
 
-    @ViewBuilder
-    private func taskView(for workflowID: String) -> some View {
-        if let moduleID = model.activeSession?.moduleID {
-            workspaceView(for: moduleID)
-        } else {
-            placeholderView(
-                title: "Workflow Task",
-                systemImage: "square.stack.3d.up",
-                description: "Workflow \(workflowID) does not currently have an active module workspace."
-            )
-        }
-    }
-
-    @ViewBuilder
-    private func workspaceView(for moduleID: String) -> some View {
-        if
-            let session = model.activeSession,
-            session.moduleID == moduleID,
-            let module = model.runtime.module(withID: moduleID)
-        {
-            module.makeWorkspaceView(session: session)
-        } else {
-            ContentUnavailableView("Module Unavailable", systemImage: "square.slash")
-        }
-    }
-
-    private func placeholderView(title: String, systemImage: String, description: String) -> some View {
+    private func shellPlaceholder(title: String, systemImage: String, description: String) -> some View {
         ContentUnavailableView(title, systemImage: systemImage, description: Text(description))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
