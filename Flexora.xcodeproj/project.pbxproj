@@ -8,6 +8,8 @@
 
 /* Begin PBXFileReference section */
 		A0C4FF592FA6EE3400870D65 /* Flexora.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flexora.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1D000112FA6EE3400870D65 /* FlexoraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlexoraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1D000122FA6EE3400870D65 /* FlexoraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlexoraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +18,34 @@
 			path = Flexora;
 			sourceTree = "<group>";
 		};
+		B1D000132FA6EE3400870D65 /* FlexoraTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FlexoraTests;
+			sourceTree = "<group>";
+		};
+		B1D000142FA6EE3400870D65 /* FlexoraUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FlexoraUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A0C4FF562FA6EE3400870D65 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1D0001F2FA6EE3400870D65 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1D000202FA6EE3400870D65 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +59,8 @@
 			isa = PBXGroup;
 			children = (
 				A0C4FF5B2FA6EE3400870D65 /* Flexora */,
+				B1D000132FA6EE3400870D65 /* FlexoraTests */,
+				B1D000142FA6EE3400870D65 /* FlexoraUITests */,
 				A0C4FF5A2FA6EE3400870D65 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +69,8 @@
 			isa = PBXGroup;
 			children = (
 				A0C4FF592FA6EE3400870D65 /* Flexora.app */,
+				B1D000112FA6EE3400870D65 /* FlexoraTests.xctest */,
+				B1D000122FA6EE3400870D65 /* FlexoraUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +100,52 @@
 			productReference = A0C4FF592FA6EE3400870D65 /* Flexora.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B1D000152FA6EE3400870D65 /* FlexoraTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1D000252FA6EE3400870D65 /* Build configuration list for PBXNativeTarget "FlexoraTests" */;
+			buildPhases = (
+				B1D0001E2FA6EE3400870D65 /* Sources */,
+				B1D0001F2FA6EE3400870D65 /* Frameworks */,
+				B1D000212FA6EE3400870D65 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B1D0001B2FA6EE3400870D65 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B1D000132FA6EE3400870D65 /* FlexoraTests */,
+			);
+			name = FlexoraTests;
+			packageProductDependencies = (
+			);
+			productName = FlexoraTests;
+			productReference = B1D000112FA6EE3400870D65 /* FlexoraTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B1D000162FA6EE3400870D65 /* FlexoraUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1D000282FA6EE3400870D65 /* Build configuration list for PBXNativeTarget "FlexoraUITests" */;
+			buildPhases = (
+				B1D0001D2FA6EE3400870D65 /* Sources */,
+				B1D000202FA6EE3400870D65 /* Frameworks */,
+				B1D000222FA6EE3400870D65 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B1D0001C2FA6EE3400870D65 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B1D000142FA6EE3400870D65 /* FlexoraUITests */,
+			);
+			name = FlexoraUITests;
+			packageProductDependencies = (
+			);
+			productName = FlexoraUITests;
+			productReference = B1D000122FA6EE3400870D65 /* FlexoraUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +158,14 @@
 				TargetAttributes = {
 					A0C4FF582FA6EE3400870D65 = {
 						CreatedOnToolsVersion = 26.4.1;
+					};
+					B1D000152FA6EE3400870D65 = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = A0C4FF582FA6EE3400870D65;
+					};
+					B1D000162FA6EE3400870D65 = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = A0C4FF582FA6EE3400870D65;
 					};
 				};
 			};
@@ -100,12 +184,28 @@
 			projectRoot = "";
 			targets = (
 				A0C4FF582FA6EE3400870D65 /* Flexora */,
+				B1D000152FA6EE3400870D65 /* FlexoraTests */,
+				B1D000162FA6EE3400870D65 /* FlexoraUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A0C4FF572FA6EE3400870D65 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1D000212FA6EE3400870D65 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1D000222FA6EE3400870D65 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +222,51 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B1D0001D2FA6EE3400870D65 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1D0001E2FA6EE3400870D65 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		B1D000172FA6EE3400870D65 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0C4FF512FA6EE3400870D65 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A0C4FF582FA6EE3400870D65;
+			remoteInfo = Flexora;
+		};
+		B1D000182FA6EE3400870D65 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0C4FF512FA6EE3400870D65 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A0C4FF582FA6EE3400870D65;
+			remoteInfo = Flexora;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		B1D0001B2FA6EE3400870D65 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A0C4FF582FA6EE3400870D65 /* Flexora */;
+			targetProxy = B1D000172FA6EE3400870D65 /* PBXContainerItemProxy */;
+		};
+		B1D0001C2FA6EE3400870D65 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A0C4FF582FA6EE3400870D65 /* Flexora */;
+			targetProxy = B1D000182FA6EE3400870D65 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A0C4FF622FA6EE3600870D65 /* Debug */ = {
@@ -309,6 +453,88 @@
 			};
 			name = Release;
 		};
+		B1D000232FA6EE3400870D65 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D6KLUAZV3B;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.me.FlexoraTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flexora.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flexora";
+				TEST_TARGET_NAME = Flexora;
+			};
+			name = Debug;
+		};
+		B1D000242FA6EE3400870D65 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D6KLUAZV3B;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.me.FlexoraTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flexora.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flexora";
+				TEST_TARGET_NAME = Flexora;
+			};
+			name = Release;
+		};
+		B1D000262FA6EE3400870D65 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D6KLUAZV3B;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.me.FlexoraUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Flexora;
+			};
+			name = Debug;
+		};
+		B1D000272FA6EE3400870D65 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D6KLUAZV3B;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.me.FlexoraUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Flexora;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -326,6 +552,24 @@
 			buildConfigurations = (
 				A0C4FF652FA6EE3600870D65 /* Debug */,
 				A0C4FF662FA6EE3600870D65 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1D000252FA6EE3400870D65 /* Build configuration list for PBXNativeTarget "FlexoraTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1D000232FA6EE3400870D65 /* Debug */,
+				B1D000242FA6EE3400870D65 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1D000282FA6EE3400870D65 /* Build configuration list for PBXNativeTarget "FlexoraUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1D000262FA6EE3400870D65 /* Debug */,
+				B1D000272FA6EE3400870D65 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -11,7 +11,12 @@ import SwiftUI
 struct FlexoraApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            Text("Choose a Module")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        Settings {
+            Text("Settings")
+                .padding()
         }
     }
 }
