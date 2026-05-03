@@ -41,30 +41,6 @@ public final class AppModel: ObservableObject {
         applyRuntimeState(activeModuleID: runtime.activeModuleID)
     }
 
-    public func workspaceView(for moduleID: String) -> AnyView {
-        guard
-            let session = activeSession,
-            session.moduleID == moduleID,
-            let module = runtime.registeredModules[moduleID]
-        else {
-            return AnyView(
-                ContentUnavailableView("Module Unavailable", systemImage: "square.slash")
-            )
-        }
-
-        return module.makeWorkspaceView(session: session)
-    }
-
-    public static func bootstrap() -> AppModel {
-        let runtime = ModuleRuntime()
-        let videoModule = VideoFrameExtractionModule()
-
-        runtime.register(module: videoModule)
-        runtime.setModuleEnabled(videoModule.descriptor.id, isEnabled: true)
-
-        return AppModel(runtime: runtime)
-    }
-
     private func applyRuntimeState(activeModuleID: String?) {
         guard let activeModuleID else {
             activeSession = nil

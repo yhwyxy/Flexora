@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var model = AppModel.bootstrap()
+    @ObservedObject var model: AppModel
 
     var body: some View {
         MainWindowView(model: model)

@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct FlexoraApp: App {
-    @StateObject private var model = AppModel.bootstrap()
+    @StateObject private var model = makeModel()
 
     var body: some Scene {
         WindowGroup {
@@ -18,5 +18,15 @@ struct FlexoraApp: App {
         Settings {
             SettingsView(model: model)
         }
+    }
+
+    private static func makeModel() -> AppModel {
+        let runtime = ModuleRuntime()
+        let videoModule = VideoFrameExtractionModule()
+
+        runtime.register(module: videoModule)
+        runtime.setModuleEnabled(videoModule.descriptor.id, isEnabled: true)
+
+        return AppModel(runtime: runtime)
     }
 }

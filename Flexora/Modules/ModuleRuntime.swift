@@ -26,6 +26,10 @@ public final class ModuleRuntime: ObservableObject {
         enabledModuleIDs.contains(id)
     }
 
+    public func module(withID id: String) -> ToolModule? {
+        registeredModules[id]
+    }
+
     public func register(module: ToolModule) {
         registeredModules[module.descriptor.id] = module
     }

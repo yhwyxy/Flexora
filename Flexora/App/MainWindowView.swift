@@ -17,9 +17,22 @@ struct MainWindowView: View {
             case .moduleChooser:
                 ModuleSelectionView(model: model)
             case let .workspace(moduleID):
-                model.workspaceView(for: moduleID)
+                workspaceView(for: moduleID)
             }
         }
         .navigationSplitViewStyle(.balanced)
+    }
+
+    @ViewBuilder
+    private func workspaceView(for moduleID: String) -> some View {
+        if
+            let session = model.activeSession,
+            session.moduleID == moduleID,
+            let module = model.runtime.module(withID: moduleID)
+        {
+            module.makeWorkspaceView(session: session)
+        } else {
+            ContentUnavailableView("Module Unavailable", systemImage: "square.slash")
+        }
     }
 }
