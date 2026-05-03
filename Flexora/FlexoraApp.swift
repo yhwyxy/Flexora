@@ -9,13 +9,14 @@ import SwiftUI
 
 @main
 struct FlexoraApp: App {
+    @StateObject private var model = AppModel.bootstrap()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainWindowView(model: model)
         }
         Settings {
-            Text("Settings")
-                .padding()
+            SettingsView(model: model)
         }
     }
 }

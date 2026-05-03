@@ -1,9 +1,11 @@
+import Combine
+
 @MainActor
-public final class ModuleRuntime {
+public final class ModuleRuntime: ObservableObject {
     public var onActiveModuleChange: ((String?) -> Void)?
-    public private(set) var registeredModules: [String: ToolModule] = [:]
-    public private(set) var enabledModuleIDs: Set<String> = []
-    public private(set) var activeModuleID: String?
+    @Published public private(set) var registeredModules: [String: ToolModule] = [:]
+    @Published public private(set) var enabledModuleIDs: Set<String> = []
+    @Published public private(set) var activeModuleID: String?
 
     public init() {}
 
@@ -12,6 +14,16 @@ public final class ModuleRuntime {
             .map(\.descriptor)
             .filter { enabledModuleIDs.contains($0.id) }
             .sorted { $0.name < $1.name }
+    }
+
+    public var allModules: [ModuleDescriptor] {
+        registeredModules.values
+            .map(\.descriptor)
+            .sorted { $0.name < $1.name }
+    }
+
+    public func isModuleEnabled(_ id: String) -> Bool {
+        enabledModuleIDs.contains(id)
     }
 
     public func register(module: ToolModule) {

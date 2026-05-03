@@ -1,9 +1,9 @@
 import XCTest
 
 final class FlexoraUITests: XCTestCase {
-    func testLaunchesToModuleChooser() {
+    func testVideoModuleAppearsInChooser() {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.staticTexts["module-chooser-placeholder"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Video Frame Extraction"].waitForExistence(timeout: 2))
     }
 }

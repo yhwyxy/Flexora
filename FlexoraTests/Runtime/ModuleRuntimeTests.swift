@@ -4,14 +4,15 @@ import SwiftUI
 
 @MainActor
 struct ModuleRuntimeTests {
-    @Test func enabledModuleAppearsInAvailableList() {
+    @Test func availableModulesAreSortedByName() {
         let runtime = ModuleRuntime()
-        let module = TestModule(id: "video")
+        runtime.register(module: TestModule(id: "video", name: "Video Frame Extraction"))
+        runtime.register(module: TestModule(id: "audio", name: "Audio Extraction"))
 
-        runtime.register(module: module)
         runtime.setModuleEnabled("video", isEnabled: true)
+        runtime.setModuleEnabled("audio", isEnabled: true)
 
-        #expect(runtime.availableModules.map(\.id) == ["video"])
+        #expect(runtime.availableModules.map(\.name) == ["Audio Extraction", "Video Frame Extraction"])
     }
 
     @Test func disablingActiveModuleUnloadsIt() {
@@ -69,10 +70,10 @@ private final class TestModule: ToolModule {
     private(set) var loadCallCount = 0
     private(set) var unloadCallCount = 0
 
-    init(id: String) {
+    init(id: String, name: String? = nil) {
         descriptor = ModuleDescriptor(
             id: id,
-            name: id.capitalized,
+            name: name ?? id.capitalized,
             capabilities: []
         )
     }
