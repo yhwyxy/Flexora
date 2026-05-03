@@ -232,6 +232,78 @@ struct ToolSessionTests {
         #expect(model.activeSession == nil)
     }
 
+    @Test func mainWindowViewResolvesWorkspaceModuleForSingleModuleTaskRoute() {
+        let runtime = ModuleRuntime()
+        let store = WorkflowStore()
+        let module = TestAppModule(id: "video")
+        let model = AppModel(runtime: runtime, workflowStore: store)
+
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
+        model.openModule(withID: "video")
+
+        let view = MainWindowView(model: model)
+
+        #expect(view.taskWorkspaceModuleID(for: "module.video.default") == "video")
+    }
+
+    @Test func mainWindowViewDoesNotResolveWorkspaceModuleForMultiModuleTaskRoute() {
+        let runtime = ModuleRuntime()
+        let store = WorkflowStore()
+        let videoModule = TestAppModule(id: "video")
+        let imageModule = TestAppModule(id: "images")
+        let model = AppModel(runtime: runtime, workflowStore: store)
+
+        runtime.register(module: videoModule)
+        runtime.register(module: imageModule)
+        runtime.setModuleEnabled("video", isEnabled: true)
+        runtime.setModuleEnabled("images", isEnabled: true)
+        store.save(
+            WorkflowRecord(
+                id: "workflow.video-storyboard",
+                title: "Video Storyboard",
+                summary: "Generate a storyboard from a clip.",
+                source: .userAuthored,
+                tags: [],
+                nodes: [
+                    WorkflowNode(id: "video-node", moduleID: "video", title: "Extract Frames"),
+                    WorkflowNode(id: "image-node", moduleID: "images", title: "Build Contact Sheet"),
+                ],
+                connections: []
+            )
+        )
+        model.openWorkflow(withID: "workflow.video-storyboard")
+
+        let view = MainWindowView(model: model)
+
+        #expect(view.taskWorkspaceModuleID(for: "workflow.video-storyboard") == nil)
+    }
+
+    @Test func sidebarActiveDestinationTracksOnlyTopLevelRoutes() {
+        let runtime = ModuleRuntime()
+        let store = WorkflowStore()
+        let module = TestAppModule(id: "video")
+        let model = AppModel(runtime: runtime, workflowStore: store)
+
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
+
+        model.showHome()
+        #expect(AppSidebarView(model: model).activeDestination == .home)
+
+        model.showWorkshop()
+        #expect(AppSidebarView(model: model).activeDestination == .workshop)
+
+        model.showModules()
+        #expect(AppSidebarView(model: model).activeDestination == .modules)
+
+        model.openModule(withID: "video")
+        #expect(AppSidebarView(model: model).activeDestination == nil)
+
+        model.editWorkflow(withID: "module.video.default")
+        #expect(AppSidebarView(model: model).activeDestination == nil)
+    }
+
     @Test func syncStateFromRuntimeResynchronizesDefaultWorkflowsAndClearsInvalidSession() {
         let runtime = ModuleRuntime()
         let store = WorkflowStore()

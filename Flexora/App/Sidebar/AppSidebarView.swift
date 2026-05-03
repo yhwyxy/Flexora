@@ -4,11 +4,15 @@ struct AppSidebarView: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
-        List(selection: selection) {
+        List {
             Section("Workspace") {
-                ForEach(SidebarDestination.allCases) { destination in
-                    Label(destination.title, systemImage: destination.systemImage)
-                        .tag(destination)
+                ForEach(AppSidebarDestination.allCases) { destination in
+                    Button(action: {
+                        navigate(to: destination)
+                    }) {
+                        sidebarRow(for: destination)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -16,37 +20,47 @@ struct AppSidebarView: View {
         .navigationTitle("Flexora")
     }
 
-    private var selection: Binding<SidebarDestination?> {
-        Binding(
-            get: {
-                switch model.route {
-                case .home, .task, .workflowEditor:
-                    return .home
-                case .workshop:
-                    return .workshop
-                case .modules:
-                    return .modules
-                }
-            },
-            set: { destination in
-                guard let destination else {
-                    return
-                }
+    var activeDestination: AppSidebarDestination? {
+        guard let route = model.route.topLevelRoute else {
+            return nil
+        }
 
-                switch destination {
-                case .home:
-                    model.showHome()
-                case .workshop:
-                    model.showWorkshop()
-                case .modules:
-                    model.showModules()
-                }
-            }
-        )
+        switch route {
+        case .home:
+            return .home
+        case .workshop:
+            return .workshop
+        case .modules:
+            return .modules
+        }
+    }
+
+    @ViewBuilder
+    private func sidebarRow(for destination: AppSidebarDestination) -> some View {
+        Label(destination.title, systemImage: destination.systemImage)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(activeDestination == destination ? Color.accentColor.opacity(0.18) : Color.clear)
+            )
+            .contentShape(Rectangle())
+    }
+
+    private func navigate(to destination: AppSidebarDestination) {
+        switch destination {
+        case .home:
+            model.showHome()
+        case .workshop:
+            model.showWorkshop()
+        case .modules:
+            model.showModules()
+        }
     }
 }
 
-private enum SidebarDestination: String, CaseIterable, Identifiable {
+enum AppSidebarDestination: String, CaseIterable, Identifiable {
     case home
     case workshop
     case modules
