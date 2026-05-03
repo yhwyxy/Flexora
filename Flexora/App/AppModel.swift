@@ -7,6 +7,7 @@ public final class AppModel: ObservableObject {
     public let workflowStore: WorkflowStore
     @Published public var route: AppRoute
     @Published public private(set) var activeSession: ToolSession?
+    private var activeSessionWorkflowID: String?
     private var runtimeCancellable: AnyCancellable?
     private var workflowStoreCancellable: AnyCancellable?
 
@@ -47,7 +48,7 @@ public final class AppModel: ObservableObject {
         }
 
         route = .task(workflowID: workflowID)
-        activeSession = activeSession(forWorkflowID: workflowID)
+        updateActiveSession(forWorkflowID: workflowID)
     }
 
     public func editWorkflow(withID workflowID: String) {
@@ -56,23 +57,35 @@ public final class AppModel: ObservableObject {
         }
 
         route = .workflowEditor(workflowID: workflowID)
-        activeSession = nil
+        clearActiveSession()
+    }
+
+    public func showHome() {
+        showTopLevelRoute(.home)
+    }
+
+    public func showWorkshop() {
+        showTopLevelRoute(.workshop)
+    }
+
+    public func showModules() {
+        showTopLevelRoute(.modules)
     }
 
     public func syncStateFromRuntime() {
         syncDefaultWorkflows()
 
         guard route.isWorkflowEditor == false else {
-            activeSession = nil
+            clearActiveSession()
             return
         }
 
         guard let workflowID = route.workflowID else {
-            activeSession = nil
+            clearActiveSession()
             return
         }
 
-        activeSession = activeSession(forWorkflowID: workflowID)
+        updateActiveSession(forWorkflowID: workflowID)
     }
 
     public func setModuleEnabled(_ id: String, isEnabled: Bool) {
@@ -84,14 +97,26 @@ public final class AppModel: ObservableObject {
         workflowStore.synchronizeDefaultWorkflows(with: runtime)
     }
 
-    private func activeSession(forWorkflowID workflowID: String) -> ToolSession? {
+    private func showTopLevelRoute(_ route: AppRoute) {
+        self.route = route
+        clearActiveSession()
+    }
+
+    private func clearActiveSession() {
+        activeSession = nil
+        activeSessionWorkflowID = nil
+    }
+
+    private func updateActiveSession(forWorkflowID workflowID: String) {
         guard let workflow = workflowStore.workflows.first(where: { $0.id == workflowID }) else {
-            return nil
+            clearActiveSession()
+            return
         }
 
         let moduleIDs = Array(Set(workflow.nodes.map(\.moduleID))).sorted()
         guard moduleIDs.count == 1, let moduleID = moduleIDs.first else {
-            return nil
+            clearActiveSession()
+            return
         }
 
         guard
@@ -99,13 +124,15 @@ public final class AppModel: ObservableObject {
             module.descriptor.capabilities.contains(.workspace),
             runtime.activateModule(withID: moduleID) != nil
         else {
-            return nil
+            clearActiveSession()
+            return
         }
 
-        if activeSession?.moduleID == moduleID {
-            return activeSession
+        if activeSession?.moduleID == moduleID, activeSessionWorkflowID == workflowID {
+            return
         }
 
-        return ToolSession(moduleID: moduleID)
+        activeSession = ToolSession(moduleID: moduleID)
+        activeSessionWorkflowID = workflowID
     }
 }

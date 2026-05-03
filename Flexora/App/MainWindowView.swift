@@ -7,17 +7,17 @@ struct MainWindowView: View {
         NavigationSplitView {
             List {
                 Button("Home") {
-                    model.route = .home
+                    model.showHome()
                 }
                 .buttonStyle(.plain)
 
                 Button("Workshop") {
-                    model.route = .workshop
+                    model.showWorkshop()
                 }
                 .buttonStyle(.plain)
 
                 Button("Modules") {
-                    model.route = .modules
+                    model.showModules()
                 }
                 .buttonStyle(.plain)
             }

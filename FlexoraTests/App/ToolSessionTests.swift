@@ -158,6 +158,51 @@ struct ToolSessionTests {
         #expect(model.activeSession === originalSession)
     }
 
+    @Test func openingDifferentSingleModuleWorkflowCreatesFreshSession() {
+        let runtime = ModuleRuntime()
+        let store = WorkflowStore()
+        let module = TestAppModule(id: "video")
+        let model = AppModel(runtime: runtime, workflowStore: store)
+
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
+        store.save(
+            WorkflowRecord(
+                id: "workflow.video-storyboard",
+                title: "Video Storyboard",
+                summary: "Generate a storyboard from a clip.",
+                source: .userAuthored,
+                tags: [],
+                nodes: [
+                    WorkflowNode(id: "video-node", moduleID: "video", title: "Extract Frames"),
+                ],
+                connections: []
+            )
+        )
+        store.save(
+            WorkflowRecord(
+                id: "workflow.video-preview",
+                title: "Video Preview",
+                summary: "Build a preview from a clip.",
+                source: .userAuthored,
+                tags: [],
+                nodes: [
+                    WorkflowNode(id: "video-node", moduleID: "video", title: "Extract Frames"),
+                ],
+                connections: []
+            )
+        )
+
+        model.openWorkflow(withID: "workflow.video-storyboard")
+        let originalSession = model.activeSession
+
+        model.openWorkflow(withID: "workflow.video-preview")
+
+        #expect(model.route == .task(workflowID: "workflow.video-preview"))
+        #expect(model.activeSession?.moduleID == "video")
+        #expect(model.activeSession !== originalSession)
+    }
+
     @Test func editingWorkflowRoutesToWorkflowEditor() {
         let store = WorkflowStore()
         let model = AppModel(runtime: ModuleRuntime(), workflowStore: store)
@@ -208,6 +253,37 @@ struct ToolSessionTests {
             "module.audio.default",
             "module.video.default",
         ])
+    }
+
+    @Test func navigatingToTopLevelRoutesClearsActiveSession() {
+        let runtime = ModuleRuntime()
+        let store = WorkflowStore()
+        let module = TestAppModule(id: "video")
+        let model = AppModel(runtime: runtime, workflowStore: store)
+
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
+
+        model.openModule(withID: "video")
+        #expect(model.activeSession?.moduleID == "video")
+
+        model.showHome()
+        #expect(model.route == .home)
+        #expect(model.activeSession == nil)
+
+        model.openModule(withID: "video")
+        #expect(model.activeSession?.moduleID == "video")
+
+        model.showWorkshop()
+        #expect(model.route == .workshop)
+        #expect(model.activeSession == nil)
+
+        model.openModule(withID: "video")
+        #expect(model.activeSession?.moduleID == "video")
+
+        model.showModules()
+        #expect(model.route == .modules)
+        #expect(model.activeSession == nil)
     }
 
     @Test func syncStateFromRuntimeDoesNotForceRouteFromTopLevelNavigation() {
