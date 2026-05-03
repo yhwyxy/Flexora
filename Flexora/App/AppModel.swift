@@ -10,7 +10,10 @@ public final class AppModel {
     }
 
     public func openModule(withID id: String) {
-        _ = runtime.activateModule(withID: id)
+        guard runtime.activateModule(withID: id) != nil else {
+            return
+        }
+
         activeSession = ToolSession(moduleID: id)
         route = .workspace(moduleID: id)
     }

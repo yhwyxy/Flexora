@@ -36,6 +36,10 @@ public final class ModuleRuntime {
             return nil
         }
 
+        if let activeModuleID, activeModuleID != id {
+            registeredModules[activeModuleID]?.unload()
+        }
+
         module.load()
         activeModuleID = id
         return module

@@ -1,14 +1,51 @@
 import Testing
+import SwiftUI
 @testable import Flexora
 
 struct ToolSessionTests {
     @MainActor
     @Test func selectingModuleUpdatesRoute() {
-        let model = AppModel(runtime: ModuleRuntime())
+        let runtime = ModuleRuntime()
+        let module = TestAppModule(id: "video")
+        let model = AppModel(runtime: runtime)
+
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
 
         model.route = .moduleChooser
         model.openModule(withID: "video")
 
         #expect(model.route == .workspace(moduleID: "video"))
+    }
+
+    @MainActor
+    @Test func openingUnavailableModuleLeavesChooserRoute() {
+        let model = AppModel(runtime: ModuleRuntime())
+
+        model.route = .moduleChooser
+        model.openModule(withID: "video")
+
+        #expect(model.route == .moduleChooser)
+        #expect(model.activeSession == nil)
+    }
+}
+
+private final class TestAppModule: ToolModule {
+    let descriptor: ModuleDescriptor
+
+    init(id: String) {
+        descriptor = ModuleDescriptor(
+            id: id,
+            name: id.capitalized,
+            capabilities: []
+        )
+    }
+
+    func load() {}
+
+    func unload() {}
+
+    func makeWorkspaceView(session: ToolSession) -> AnyView {
+        AnyView(EmptyView())
     }
 }

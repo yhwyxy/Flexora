@@ -26,6 +26,26 @@ struct ModuleRuntimeTests {
         #expect(module.unloadCallCount == 1)
         #expect(runtime.activeModuleID == nil)
     }
+
+    @Test func switchingActiveModulesUnloadsPreviousModule() {
+        let runtime = ModuleRuntime()
+        let firstModule = TestModule(id: "video")
+        let secondModule = TestModule(id: "audio")
+
+        runtime.register(module: firstModule)
+        runtime.register(module: secondModule)
+        runtime.setModuleEnabled("video", isEnabled: true)
+        runtime.setModuleEnabled("audio", isEnabled: true)
+
+        _ = runtime.activateModule(withID: "video")
+        _ = runtime.activateModule(withID: "audio")
+
+        #expect(firstModule.loadCallCount == 1)
+        #expect(firstModule.unloadCallCount == 1)
+        #expect(secondModule.loadCallCount == 1)
+        #expect(secondModule.unloadCallCount == 0)
+        #expect(runtime.activeModuleID == "audio")
+    }
 }
 
 private final class TestModule: ToolModule {
