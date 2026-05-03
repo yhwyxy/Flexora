@@ -456,6 +456,7 @@
 		B1D000232FA6EE3400870D65 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = D6KLUAZV3B;
@@ -471,6 +472,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flexora.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flexora";
 				TEST_TARGET_NAME = Flexora;
 			};
 			name = Debug;
@@ -478,6 +480,7 @@
 		B1D000242FA6EE3400870D65 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = D6KLUAZV3B;
@@ -493,6 +496,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flexora.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flexora";
 				TEST_TARGET_NAME = Flexora;
 			};
 			name = Release;

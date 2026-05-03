@@ -1,31 +1,55 @@
-import AppKit
 import Testing
+import SwiftUI
 @testable import Flexora
 
 struct ModuleRuntimeTests {
-    @MainActor
-    @Test func smoke() {
-        let hostingView = NSHostingView(rootView: ContentView())
-        hostingView.frame = NSRect(x: 0, y: 0, width: 640, height: 480)
-        hostingView.layoutSubtreeIfNeeded()
+    @Test func enabledModuleAppearsInAvailableList() {
+        let runtime = ModuleRuntime()
+        let module = TestModule(id: "video")
 
-        let label = findTextField(in: hostingView)
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
 
-        #expect(label?.stringValue == ContentView.placeholderTitle)
+        #expect(runtime.availableModules.map(\.id) == ["video"])
     }
 
-    @MainActor
-    private func findTextField(in view: NSView) -> NSTextField? {
-        if let textField = view as? NSTextField {
-            return textField
-        }
+    @Test func disablingActiveModuleUnloadsIt() {
+        let runtime = ModuleRuntime()
+        let module = TestModule(id: "video")
 
-        for subview in view.subviews {
-            if let match = findTextField(in: subview) {
-                return match
-            }
-        }
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
+        _ = runtime.activateModule(withID: "video")
+        runtime.setModuleEnabled("video", isEnabled: false)
 
-        return nil
+        #expect(module.loadCallCount == 1)
+        #expect(module.unloadCallCount == 1)
+        #expect(runtime.activeModuleID == nil)
+    }
+}
+
+private final class TestModule: ToolModule {
+    let descriptor: ModuleDescriptor
+    private(set) var loadCallCount = 0
+    private(set) var unloadCallCount = 0
+
+    init(id: String) {
+        descriptor = ModuleDescriptor(
+            id: id,
+            name: id.capitalized,
+            capabilities: []
+        )
+    }
+
+    func load() {
+        loadCallCount += 1
+    }
+
+    func unload() {
+        unloadCallCount += 1
+    }
+
+    func makeWorkspaceView(session: ToolSession) -> AnyView {
+        AnyView(EmptyView())
     }
 }
