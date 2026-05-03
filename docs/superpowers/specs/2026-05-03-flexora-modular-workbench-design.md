@@ -90,6 +90,26 @@ Settings-window enable and disable actions are real lifecycle controls:
 
 ## Main Window And Settings Structure
 
+## Interaction Reference And Visual Direction
+
+The interaction model may borrow from Permute’s task-oriented flow, but it should not borrow its current visual styling.
+
+Interaction ideas worth retaining:
+
+- drag-and-drop-first import behavior
+- fast movement from input to actionable output choices
+- export controls kept close to the active content instead of hidden in a distant preferences layer
+- lightweight batching semantics so users can collect multiple outputs without losing context
+
+Visual choices that should explicitly diverge:
+
+- avoid a crowded converter-style control surface
+- avoid making format and preset controls visually dominate the workspace
+- avoid framing the product primarily as a generic file converter when the user goal is visual frame selection
+- prefer calmer spacing, stronger hierarchy, and a more native macOS tools feel
+
+For the video frame extraction module, the primary surface should feel closer to a curated media browser than to a generic batch converter.
+
 ### Main Window
 
 The app starts in a module-selection workspace, not a landing page and not a hard-wired module screen. This keeps the product aligned with a modular future even when only one module exists.
@@ -104,6 +124,7 @@ For the video frame extraction module, the workspace should use:
 - Top toolbar for import, re-analysis, and export actions
 - Large central thumbnail browser as the primary interaction surface
 - Secondary inspector-style area for large preview, export selection, and export options
+- Drag target and file-picking entry that feel immediate and obvious, while keeping the window visually focused on thumbnails and preview rather than controls
 
 This layout reflects the real task: visually choosing still images, not editing a timeline.
 
