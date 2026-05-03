@@ -1,3 +1,4 @@
+@MainActor
 public final class ModuleRuntime {
     public var onActiveModuleChange: ((String?) -> Void)?
     public private(set) var registeredModules: [String: ToolModule] = [:]

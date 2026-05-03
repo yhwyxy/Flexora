@@ -10,6 +10,7 @@ public final class AppModel {
         self.runtime.onActiveModuleChange = { [weak self] activeModuleID in
             self?.applyRuntimeState(activeModuleID: activeModuleID)
         }
+        applyRuntimeState(activeModuleID: runtime.activeModuleID)
     }
 
     public func openModule(withID id: String) {

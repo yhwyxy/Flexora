@@ -2,6 +2,7 @@ import Testing
 import SwiftUI
 @testable import Flexora
 
+@MainActor
 struct ModuleRuntimeTests {
     @Test func enabledModuleAppearsInAvailableList() {
         let runtime = ModuleRuntime()

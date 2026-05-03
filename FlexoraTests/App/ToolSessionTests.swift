@@ -2,8 +2,8 @@ import Testing
 import SwiftUI
 @testable import Flexora
 
+@MainActor
 struct ToolSessionTests {
-    @MainActor
     @Test func selectingModuleUpdatesRoute() {
         let runtime = ModuleRuntime()
         let module = TestAppModule(id: "video")
@@ -18,7 +18,6 @@ struct ToolSessionTests {
         #expect(model.route == .workspace(moduleID: "video"))
     }
 
-    @MainActor
     @Test func openingUnavailableModuleLeavesChooserRoute() {
         let model = AppModel(runtime: ModuleRuntime())
 
@@ -29,7 +28,6 @@ struct ToolSessionTests {
         #expect(model.activeSession == nil)
     }
 
-    @MainActor
     @Test func syncStateFromRuntimeClearsInactiveWorkspace() {
         let runtime = ModuleRuntime()
         let module = TestAppModule(id: "video")
@@ -45,7 +43,6 @@ struct ToolSessionTests {
         #expect(model.activeSession == nil)
     }
 
-    @MainActor
     @Test func reopeningActiveModulePreservesSession() {
         let runtime = ModuleRuntime()
         let module = TestAppModule(id: "video")
@@ -60,6 +57,20 @@ struct ToolSessionTests {
 
         #expect(model.route == .workspace(moduleID: "video"))
         #expect(model.activeSession === originalSession)
+    }
+
+    @Test func initSynchronizesWithActiveRuntimeModule() {
+        let runtime = ModuleRuntime()
+        let module = TestAppModule(id: "video")
+
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
+        runtime.activateModule(withID: "video")
+
+        let model = AppModel(runtime: runtime)
+
+        #expect(model.route == .workspace(moduleID: "video"))
+        #expect(model.activeSession?.moduleID == "video")
     }
 }
 
