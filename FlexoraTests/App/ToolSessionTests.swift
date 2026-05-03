@@ -14,11 +14,34 @@ struct ToolSessionTests {
         #expect(AppRoute.home.topLevelRoute == AppRoute.TopLevelRoute.home)
         #expect(AppRoute.workshop.topLevelRoute == AppRoute.TopLevelRoute.workshop)
         #expect(AppRoute.modules.topLevelRoute == AppRoute.TopLevelRoute.modules)
+        switch AppRoute.home {
+        case .home:
+            break
+        default:
+            Issue.record("Expected AppRoute.home to be the .home case.")
+        }
+        switch AppRoute.workshop {
+        case .workshop:
+            break
+        default:
+            Issue.record("Expected AppRoute.workshop to be the .workshop case.")
+        }
+        switch AppRoute.modules {
+        case .modules:
+            break
+        default:
+            Issue.record("Expected AppRoute.modules to be the .modules case.")
+        }
     }
 
     @Test func taskRouteRetainsWorkflowIdentityForDefaultWorkflow() {
         #expect(AppRoute.task(workflowID: "module.video.default") != .workspace(moduleID: "video"))
         #expect(AppRoute.task(workflowID: "module.video.default").workflowID == "module.video.default")
+        if case let .task(workflowID: workflowID) = AppRoute.task(workflowID: "module.video.default") {
+            #expect(workflowID == "module.video.default")
+        } else {
+            Issue.record("Expected AppRoute.task(workflowID:) to produce the .task case.")
+        }
     }
 
     @Test func openingModuleRoutesToDefaultWorkflowTask() {
@@ -33,6 +56,11 @@ struct ToolSessionTests {
         model.openModule(withID: "video")
 
         #expect(model.route == .task(workflowID: "module.video.default"))
+        if case let .task(workflowID: workflowID) = model.route {
+            #expect(workflowID == "module.video.default")
+        } else {
+            Issue.record("Expected module opening to route to the .task case.")
+        }
         #expect(model.activeSession?.moduleID == "video")
         #expect(store.workflows.map(\.id) == ["module.video.default"])
     }
@@ -70,6 +98,11 @@ struct ToolSessionTests {
 
         #expect(model.activeSession == nil)
         #expect(model.route == .task(workflowID: "workflow.video-storyboard"))
+        if case let .task(workflowID: workflowID) = model.route {
+            #expect(workflowID == "workflow.video-storyboard")
+        } else {
+            Issue.record("Expected workflow opening to route to the .task case.")
+        }
     }
 
     @Test func reopeningActiveSingleModuleWorkflowPreservesSession() {
@@ -100,6 +133,11 @@ struct ToolSessionTests {
         model.openWorkflow(withID: "workflow.video-storyboard")
 
         #expect(model.route == .task(workflowID: "workflow.video-storyboard"))
+        if case let .task(workflowID: workflowID) = model.route {
+            #expect(workflowID == "workflow.video-storyboard")
+        } else {
+            Issue.record("Expected workflow reopening to preserve the .task case.")
+        }
         #expect(model.activeSession === originalSession)
     }
 
@@ -124,6 +162,11 @@ struct ToolSessionTests {
         model.editWorkflow(withID: "workflow.video-storyboard")
 
         #expect(model.route == .workflowEditor(workflowID: "workflow.video-storyboard"))
+        if case let .workflowEditor(workflowID: workflowID) = model.route {
+            #expect(workflowID == "workflow.video-storyboard")
+        } else {
+            Issue.record("Expected workflow editing to route to the .workflowEditor case.")
+        }
         #expect(model.activeSession == nil)
     }
 

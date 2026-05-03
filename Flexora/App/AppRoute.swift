@@ -5,82 +5,60 @@ public enum AppRoute: Equatable {
         case modules
     }
 
+    case home
+    case workshop
+    case modules
+    case task(workflowID: String)
+    case workflowEditor(workflowID: String)
     case moduleChooser
     case workspace(moduleID: String)
 
-    private nonisolated static let homePrefix = "__home__"
-    private nonisolated static let workshopPrefix = "__workshop__"
-    private nonisolated static let modulesPrefix = "__modules__"
-    private nonisolated static let taskPrefix = "__task__:"
-    private nonisolated static let workflowEditorPrefix = "__workflowEditor__:"
-
-    public nonisolated static let home: AppRoute = .workspace(moduleID: homePrefix)
-    public nonisolated static let workshop: AppRoute = .workspace(moduleID: workshopPrefix)
-    public nonisolated static let modules: AppRoute = .workspace(moduleID: modulesPrefix)
-
-    public nonisolated static func task(workflowID: String) -> AppRoute {
-        .workspace(moduleID: taskPrefix + workflowID)
-    }
-
-    public nonisolated static func workflowEditor(workflowID: String) -> AppRoute {
-        .workspace(moduleID: workflowEditorPrefix + workflowID)
-    }
-
     public var topLevelRoute: TopLevelRoute? {
-        guard case let .workspace(moduleID) = self else { return nil }
-        switch moduleID {
-        case Self.homePrefix:
+        switch self {
+        case .home:
             return .home
-        case Self.workshopPrefix:
+        case .workshop:
             return .workshop
-        case Self.modulesPrefix:
+        case .modules:
             return .modules
-        default:
+        case .task, .workflowEditor, .moduleChooser, .workspace:
             return nil
         }
     }
 
     public var workflowID: String? {
         switch self {
-        case .moduleChooser:
-            return nil
+        case .task(let workflowID), .workflowEditor(let workflowID):
+            return workflowID
         case .workspace(let moduleID):
-            if moduleID.hasPrefix(Self.workflowEditorPrefix) {
-                return String(moduleID.dropFirst(Self.workflowEditorPrefix.count))
-            }
-
-            if moduleID.hasPrefix(Self.taskPrefix) {
-                return String(moduleID.dropFirst(Self.taskPrefix.count))
-            }
-
             return Self.defaultWorkflowID(forModuleID: moduleID)
+        case .home, .workshop, .modules, .moduleChooser:
+            return nil
         }
     }
 
     public var isWorkflowEditor: Bool {
-        guard case let .workspace(moduleID) = self else {
-            return false
+        if case .workflowEditor = self {
+            return true
         }
 
-        return moduleID.hasPrefix(Self.workflowEditorPrefix)
+        return false
     }
 
     public var isTask: Bool {
-        workflowID != nil && isWorkflowEditor == false
+        if case .task = self {
+            return true
+        }
+
+        if case .workspace = self {
+            return true
+        }
+
+        return false
     }
 
     public var moduleID: String? {
         guard case let .workspace(moduleID) = self else {
-            return nil
-        }
-
-        guard
-            moduleID.hasPrefix(Self.taskPrefix) == false,
-            moduleID.hasPrefix(Self.workflowEditorPrefix) == false,
-            moduleID.hasPrefix(Self.homePrefix) == false,
-            moduleID.hasPrefix(Self.workshopPrefix) == false,
-            moduleID.hasPrefix(Self.modulesPrefix) == false
-        else {
             return nil
         }
 
