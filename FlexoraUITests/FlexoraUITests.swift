@@ -6,4 +6,12 @@ final class FlexoraUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["Video Frame Extraction"].waitForExistence(timeout: 2))
     }
+
+    func testWorkspaceShowsImportActions() {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["Video Frame Extraction"].click()
+        XCTAssertTrue(app.buttons["Import Video"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Drop a video here"].exists)
+    }
 }
