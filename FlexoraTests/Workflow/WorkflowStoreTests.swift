@@ -57,6 +57,48 @@ struct WorkflowStoreTests {
         #expect(store.workflows.first?.id == "module.video.default")
     }
 
+    @Test func synchronizeDefaultWorkflowsPreservesEditedDefaultWorkflow() throws {
+        let runtime = ModuleRuntime()
+        runtime.register(module: TestWorkflowModule(
+            id: "video",
+            name: "Video Frame Extraction",
+            summary: "Find strong still frames from a video."
+        ))
+        runtime.setModuleEnabled("video", isEnabled: true)
+
+        let store = WorkflowStore()
+        store.synchronizeDefaultWorkflows(with: runtime)
+
+        store.save(
+            WorkflowRecord(
+                id: "module.video.default",
+                title: "Video Storyboard",
+                summary: "Generate a custom storyboard from a clip.",
+                source: .moduleDefault(moduleID: "video"),
+                tags: [
+                    WorkflowTagRecord(id: "storyboard", name: "Storyboard"),
+                ],
+                nodes: [
+                    WorkflowNode(id: "video.root", moduleID: "video", title: "Edited Extractor"),
+                ],
+                connections: []
+            )
+        )
+
+        store.synchronizeDefaultWorkflows(with: runtime)
+
+        let workflow = try #require(store.workflows.first)
+        #expect(workflow.id == "module.video.default")
+        #expect(workflow.title == "Video Storyboard")
+        #expect(workflow.summary == "Generate a custom storyboard from a clip.")
+        #expect(workflow.tags == [
+            WorkflowTagRecord(id: "storyboard", name: "Storyboard"),
+        ])
+        #expect(workflow.nodes == [
+            WorkflowNode(id: "video.root", moduleID: "video", title: "Edited Extractor"),
+        ])
+    }
+
     @Test func synchronizeDefaultWorkflowsRemovesStaleDefaultWorkflows() {
         let initialRuntime = ModuleRuntime()
         initialRuntime.register(module: TestWorkflowModule(

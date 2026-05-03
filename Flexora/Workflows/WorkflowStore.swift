@@ -26,12 +26,10 @@ public final class WorkflowStore: ObservableObject {
         }
 
         for descriptor in moduleDescriptors {
-            let workflow = defaultWorkflow(for: descriptor)
+            let workflowID = "module.\(descriptor.id).default"
 
-            if let index = reconciledWorkflows.firstIndex(where: { $0.id == workflow.id }) {
-                reconciledWorkflows[index] = workflow
-            } else {
-                reconciledWorkflows.append(workflow)
+            if reconciledWorkflows.contains(where: { $0.id == workflowID }) == false {
+                reconciledWorkflows.append(defaultWorkflow(for: descriptor))
             }
         }
 
