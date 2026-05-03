@@ -4,6 +4,14 @@ struct VideoFrameExtractionWorkspaceView: View {
     @StateObject private var importController = VideoImportController()
     @StateObject private var browserModel = ThumbnailBrowserViewModel()
 
+    init(
+        importController: VideoImportController = VideoImportController(),
+        browserModel: ThumbnailBrowserViewModel = ThumbnailBrowserViewModel()
+    ) {
+        _importController = StateObject(wrappedValue: importController)
+        _browserModel = StateObject(wrappedValue: browserModel)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
@@ -15,6 +23,7 @@ struct VideoFrameExtractionWorkspaceView: View {
 
                 Button("Export") {}
                     .disabled(browserModel.exportSelection.isEmpty)
+                    .accessibilityIdentifier("video-export-button")
             }
 
             FileDropZone(title: "Drop a video here") { urls in

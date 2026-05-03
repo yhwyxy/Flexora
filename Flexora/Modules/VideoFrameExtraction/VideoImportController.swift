@@ -8,6 +8,10 @@ final class VideoImportController: ObservableObject {
 
     @Published var importedVideoURL: URL?
 
+    init(importedVideoURL: URL? = nil) {
+        self.importedVideoURL = importedVideoURL
+    }
+
     func isSupportedVideoURL(_ url: URL) -> Bool {
         supportedExtensions.contains(url.pathExtension.lowercased())
     }

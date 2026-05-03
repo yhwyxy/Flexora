@@ -10,4 +10,12 @@ struct VideoImportControllerTests {
         #expect(controller.isSupportedVideoURL(URL(fileURLWithPath: "/tmp/test.mp4")))
         #expect(!controller.isSupportedVideoURL(URL(fileURLWithPath: "/tmp/test.pdf")))
     }
+
+    @Test func initRetainsImportedVideoURL() {
+        let url = URL(fileURLWithPath: "/tmp/wallpaper.mov")
+
+        let controller = VideoImportController(importedVideoURL: url)
+
+        #expect(controller.importedVideoURL == url)
+    }
 }
