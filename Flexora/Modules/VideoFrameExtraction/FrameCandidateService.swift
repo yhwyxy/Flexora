@@ -1,4 +1,5 @@
 import AVFoundation
+import AppKit
 import Foundation
 
 struct FrameCandidateService {
@@ -23,7 +24,14 @@ struct FrameCandidateService {
             let time = timeValue.timeValue
             let (image, _) = try await generator.image(at: time)
             let scoreSeed = Self.quickDifferenceSeed(from: image)
-            samples.append(VideoFrameSample(time: time.seconds, scoreSeed: scoreSeed))
+            let thumbnailImage = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+            samples.append(
+                VideoFrameSample(
+                    time: time.seconds,
+                    scoreSeed: scoreSeed,
+                    thumbnailImage: thumbnailImage
+                )
+            )
         }
 
         return samples
@@ -32,15 +40,42 @@ struct FrameCandidateService {
     func selectCandidates(from samples: [VideoFrameSample], minimumDelta: Double) -> [VideoFrameCandidate] {
         guard let first = samples.first else { return [] }
 
-        var candidates = [VideoFrameCandidate(time: first.time, score: first.scoreSeed)]
+        var candidates = [candidate(from: first)]
         var previousScore = first.scoreSeed
 
         for sample in samples.dropFirst() where abs(sample.scoreSeed - previousScore) >= minimumDelta {
-            candidates.append(VideoFrameCandidate(time: sample.time, score: sample.scoreSeed))
+            candidates.append(candidate(from: sample))
             previousScore = sample.scoreSeed
         }
 
+        let minimumCoverageCount = min(4, samples.count)
+        if candidates.count < minimumCoverageCount {
+            candidates = coverageCandidates(from: samples, count: minimumCoverageCount)
+        }
+
         return candidates
+    }
+
+    private func candidate(from sample: VideoFrameSample) -> VideoFrameCandidate {
+        VideoFrameCandidate(
+            time: sample.time,
+            score: sample.scoreSeed,
+            thumbnailImage: sample.thumbnailImage
+        )
+    }
+
+    private func coverageCandidates(from samples: [VideoFrameSample], count: Int) -> [VideoFrameCandidate] {
+        guard count > 0 else { return [] }
+
+        let indices = (0..<count).map { index in
+            Int(round(Double(index) * Double(samples.count - 1) / Double(max(count - 1, 1))))
+        }
+
+        var seen = Set<Int>()
+        return indices.compactMap { index in
+            guard seen.insert(index).inserted else { return nil }
+            return candidate(from: samples[index])
+        }
     }
 
     static func quickDifferenceSeed(from image: CGImage) -> Double {

@@ -168,28 +168,50 @@ private struct LargePreviewView: View {
                 .font(.title2.weight(.semibold))
 
             if let candidate {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.accentColor.opacity(0.32), Color(nsColor: .windowBackgroundColor)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay {
-                        VStack(spacing: 10) {
-                            Text(candidate.formattedTimestamp)
-                                .font(.system(size: 40, weight: .bold, design: .rounded))
-                            Text("Score \(candidate.score, format: .number.precision(.fractionLength(2)))")
-                                .font(.title3)
-                                .foregroundStyle(.secondary)
-                        }
+                ZStack(alignment: .bottomLeading) {
+                    previewImage(for: candidate)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(candidate.formattedTimestamp)
+                            .font(.system(size: 40, weight: .bold, design: .rounded))
+                        Text("Score \(candidate.score, format: .number.precision(.fractionLength(2)))")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
                     }
+                    .padding(24)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .padding(24)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                }
             } else {
                 ContentUnavailableView("No Frame Focused", systemImage: "photo")
             }
         }
         .padding(24)
+    }
+
+    @ViewBuilder
+    private func previewImage(for candidate: VideoFrameCandidate) -> some View {
+        if let thumbnailImage = candidate.thumbnailImage {
+            Image(nsImage: thumbnailImage)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black.opacity(0.92))
+        } else {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.accentColor.opacity(0.32), Color(nsColor: .windowBackgroundColor)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        }
     }
 }
 
@@ -236,17 +258,7 @@ private struct CandidateThumbnailCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(nsColor: .windowBackgroundColor),
-                            Color.accentColor.opacity(0.22)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+            thumbnailSurface
                 .overlay(alignment: .topLeading) {
                     Text(candidate.formattedTimestamp)
                         .font(.system(.caption, design: .rounded, weight: .semibold))
@@ -282,6 +294,30 @@ private struct CandidateThumbnailCard: View {
         }
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .onTapGesture(perform: onFocus)
+    }
+
+    @ViewBuilder
+    private var thumbnailSurface: some View {
+        if let thumbnailImage = candidate.thumbnailImage {
+            Image(nsImage: thumbnailImage)
+                .resizable()
+                .scaledToFill()
+                .frame(height: 180)
+                .clipped()
+        } else {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(nsColor: .windowBackgroundColor),
+                            Color.accentColor.opacity(0.22)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(height: 180)
+        }
     }
 }
 
