@@ -9,6 +9,8 @@ struct VideoFrameExtractionWorkspaceView: View {
     @StateObject private var previewController = PreviewController()
     @State private var exportSettings = VideoExportSettings()
     @State private var isShowingExportOptions = false
+    @State private var isAnalyzingCandidates = false
+    @State private var analysisErrorMessage: String?
 
     init(
         session: ToolSession? = nil,
@@ -34,6 +36,12 @@ struct VideoFrameExtractionWorkspaceView: View {
                 }
                     .disabled(browserModel.exportSelection.isEmpty)
                     .accessibilityIdentifier("video-export-button")
+
+                Button("Preview") {
+                    previewController.toggleLargePreview()
+                }
+                .keyboardShortcut(.space, modifiers: [])
+                .disabled(focusedCandidate == nil)
             }
 
             FileDropZone(title: "Drop a video here") { urls in
@@ -63,18 +71,40 @@ struct VideoFrameExtractionWorkspaceView: View {
             )
             .frame(minWidth: 360, minHeight: 240)
         }
+        .sheet(isPresented: $previewController.isShowingLargePreview) {
+            LargePreviewView(candidate: focusedCandidate)
+                .frame(minWidth: 560, minHeight: 420)
+        }
         .onChange(of: importController.importedVideoURL) { _, importedVideoURL in
-            guard importedVideoURL != nil else {
+            guard let importedVideoURL else {
                 browserModel.loadCandidates([])
+                analysisErrorMessage = nil
+                isAnalyzingCandidates = false
                 return
             }
 
-            browserModel.loadCandidates(
-                FrameCandidateService().selectCandidates(
-                    from: mockFrameSamples,
-                    minimumDelta: 0.18
-                )
-            )
+            let service = FrameCandidateService()
+            isAnalyzingCandidates = true
+            analysisErrorMessage = nil
+
+            Task {
+                do {
+                    let samples = try await service.loadSamples(from: importedVideoURL, count: 12)
+                    let candidates = service.selectCandidates(from: samples, minimumDelta: 0.15)
+                    await MainActor.run {
+                        browserModel.loadCandidates(candidates)
+                        isAnalyzingCandidates = false
+                    }
+                } catch {
+                    let fallbackCandidates = service.selectCandidates(from: mockFrameSamples, minimumDelta: 0.18)
+                    await MainActor.run {
+                        browserModel.loadCandidates(fallbackCandidates)
+                        analysisErrorMessage = "Unable to analyze this video yet. Showing placeholder candidates."
+                        isAnalyzingCandidates = false
+                    }
+                    AppLogger.videoModule.error("Frame analysis fallback: \(error.localizedDescription, privacy: .public)")
+                }
+            }
         }
     }
 
@@ -85,12 +115,19 @@ struct VideoFrameExtractionWorkspaceView: View {
         isShowingExportOptions = false
     }
 
+    private var focusedCandidate: VideoFrameCandidate? {
+        browserModel.candidates.first { $0.id == browserModel.focusedCandidateID }
+    }
+
     private var candidateBrowser: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Candidate Frames")
                 .font(.title3.weight(.semibold))
 
-            if browserModel.candidates.isEmpty {
+            if isAnalyzingCandidates {
+                ProgressView("Analyzing video frames...")
+                    .frame(maxWidth: .infinity, minHeight: 240)
+            } else if browserModel.candidates.isEmpty {
                 ContentUnavailableView(
                     "No Frame Candidates Yet",
                     systemImage: "rectangle.stack.badge.play",
@@ -98,6 +135,12 @@ struct VideoFrameExtractionWorkspaceView: View {
                 )
                 .frame(maxWidth: .infinity, minHeight: 240)
             } else {
+                if let analysisErrorMessage {
+                    Text(analysisErrorMessage)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 16)], spacing: 16) {
                         ForEach(browserModel.candidates) { candidate in
@@ -113,6 +156,40 @@ struct VideoFrameExtractionWorkspaceView: View {
                 }
             }
         }
+    }
+}
+
+private struct LargePreviewView: View {
+    let candidate: VideoFrameCandidate?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Still Preview")
+                .font(.title2.weight(.semibold))
+
+            if let candidate {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.accentColor.opacity(0.32), Color(nsColor: .windowBackgroundColor)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay {
+                        VStack(spacing: 10) {
+                            Text(candidate.formattedTimestamp)
+                                .font(.system(size: 40, weight: .bold, design: .rounded))
+                            Text("Score \(candidate.score, format: .number.precision(.fractionLength(2)))")
+                                .font(.title3)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+            } else {
+                ContentUnavailableView("No Frame Focused", systemImage: "photo")
+            }
+        }
+        .padding(24)
     }
 }
 

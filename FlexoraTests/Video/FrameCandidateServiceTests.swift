@@ -18,4 +18,10 @@ struct FrameCandidateServiceTests {
 
         #expect(times == [0.0, 2.0])
     }
+
+    @Test func emptySamplesProduceNoCandidates() {
+        let service = FrameCandidateService()
+
+        #expect(service.selectCandidates(from: [], minimumDelta: 0.25).isEmpty)
+    }
 }

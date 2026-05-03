@@ -14,4 +14,11 @@ struct ExportControllerTests {
         #expect(session.history.count == 1)
         #expect(session.history.first?.fileNames == ["wallpaper-1.heic"])
     }
+
+    @Test func heicFailureFallsBackToUserVisibleError() {
+        let controller = ExportController()
+        let message = controller.userFacingError(for: .heicEncodingUnavailable)
+
+        #expect(message == "HEIC export is unavailable for this file. Choose PNG or JPEG instead.")
+    }
 }

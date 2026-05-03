@@ -15,4 +15,13 @@ struct ExportController {
         try data.write(to: outputURL, options: .atomic)
         return outputURL
     }
+
+    func userFacingError(for error: ExportControllerError) -> String {
+        switch error {
+        case .heicEncodingUnavailable:
+            return "HEIC export is unavailable for this file. Choose PNG or JPEG instead."
+        case .destinationNotWritable:
+            return "The selected export folder is not writable. Choose a different location and try again."
+        }
+    }
 }
