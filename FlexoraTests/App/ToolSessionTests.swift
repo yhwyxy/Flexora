@@ -5,15 +5,18 @@ import SwiftUI
 @MainActor
 struct ToolSessionTests {
     @Test func workflowFirstTopLevelRoutesAreDistinct() {
-        #expect(AppRoute.home != .moduleChooser)
-        #expect(AppRoute.workshop != .moduleChooser)
-        #expect(AppRoute.modules != .moduleChooser)
         #expect(AppRoute.home != .workshop)
         #expect(AppRoute.home != .modules)
         #expect(AppRoute.workshop != .modules)
         #expect(AppRoute.home.topLevelRoute == AppRoute.TopLevelRoute.home)
         #expect(AppRoute.workshop.topLevelRoute == AppRoute.TopLevelRoute.workshop)
         #expect(AppRoute.modules.topLevelRoute == AppRoute.TopLevelRoute.modules)
+        #expect(AppRoute.home.workflowID == nil)
+        #expect(AppRoute.workshop.workflowID == nil)
+        #expect(AppRoute.modules.workflowID == nil)
+        #expect(AppRoute.home.isTask == false)
+        #expect(AppRoute.workshop.isTask == false)
+        #expect(AppRoute.modules.isTask == false)
         switch AppRoute.home {
         case .home:
             break
@@ -35,12 +38,26 @@ struct ToolSessionTests {
     }
 
     @Test func taskRouteRetainsWorkflowIdentityForDefaultWorkflow() {
-        #expect(AppRoute.task(workflowID: "module.video.default") != .workspace(moduleID: "video"))
         #expect(AppRoute.task(workflowID: "module.video.default").workflowID == "module.video.default")
+        #expect(AppRoute.task(workflowID: "module.video.default").topLevelRoute == nil)
+        #expect(AppRoute.task(workflowID: "module.video.default").isTask)
+        #expect(AppRoute.task(workflowID: "module.video.default").isWorkflowEditor == false)
         if case let .task(workflowID: workflowID) = AppRoute.task(workflowID: "module.video.default") {
             #expect(workflowID == "module.video.default")
         } else {
             Issue.record("Expected AppRoute.task(workflowID:) to produce the .task case.")
+        }
+    }
+
+    @Test func workflowEditorRouteRetainsWorkflowIdentity() {
+        #expect(AppRoute.workflowEditor(workflowID: "workflow.video-storyboard").workflowID == "workflow.video-storyboard")
+        #expect(AppRoute.workflowEditor(workflowID: "workflow.video-storyboard").topLevelRoute == nil)
+        #expect(AppRoute.workflowEditor(workflowID: "workflow.video-storyboard").isTask == false)
+        #expect(AppRoute.workflowEditor(workflowID: "workflow.video-storyboard").isWorkflowEditor)
+        if case let .workflowEditor(workflowID: workflowID) = AppRoute.workflowEditor(workflowID: "workflow.video-storyboard") {
+            #expect(workflowID == "workflow.video-storyboard")
+        } else {
+            Issue.record("Expected AppRoute.workflowEditor(workflowID:) to produce the .workflowEditor case.")
         }
     }
 

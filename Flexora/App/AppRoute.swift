@@ -10,8 +10,6 @@ public enum AppRoute: Equatable {
     case modules
     case task(workflowID: String)
     case workflowEditor(workflowID: String)
-    case moduleChooser
-    case workspace(moduleID: String)
 
     public var topLevelRoute: TopLevelRoute? {
         switch self {
@@ -21,7 +19,7 @@ public enum AppRoute: Equatable {
             return .workshop
         case .modules:
             return .modules
-        case .task, .workflowEditor, .moduleChooser, .workspace:
+        case .task, .workflowEditor:
             return nil
         }
     }
@@ -30,9 +28,7 @@ public enum AppRoute: Equatable {
         switch self {
         case .task(let workflowID), .workflowEditor(let workflowID):
             return workflowID
-        case .workspace(let moduleID):
-            return Self.defaultWorkflowID(forModuleID: moduleID)
-        case .home, .workshop, .modules, .moduleChooser:
+        case .home, .workshop, .modules:
             return nil
         }
     }
@@ -46,23 +42,8 @@ public enum AppRoute: Equatable {
     }
 
     public var isTask: Bool {
-        if case .task = self {
-            return true
-        }
-
-        if case .workspace = self {
-            return true
-        }
-
+        if case .task = self { return true }
         return false
-    }
-
-    public var moduleID: String? {
-        guard case let .workspace(moduleID) = self else {
-            return nil
-        }
-
-        return moduleID
     }
 
     public static func defaultWorkflowID(forModuleID moduleID: String) -> String {

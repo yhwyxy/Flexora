@@ -6,7 +6,17 @@ struct MainWindowView: View {
     var body: some View {
         NavigationSplitView {
             List {
-                Button("Choose Modules") {
+                Button("Home") {
+                    model.route = .home
+                }
+                .buttonStyle(.plain)
+
+                Button("Workshop") {
+                    model.route = .workshop
+                }
+                .buttonStyle(.plain)
+
+                Button("Modules") {
                     model.route = .modules
                 }
                 .buttonStyle(.plain)
@@ -26,7 +36,7 @@ struct MainWindowView: View {
                     systemImage: "hammer",
                     description: "Workshop workflow navigation is not implemented yet."
                 )
-            case .modules, .moduleChooser:
+            case .modules:
                 ModuleSelectionView(model: model)
             case let .task(workflowID):
                 taskView(for: workflowID)
@@ -36,8 +46,6 @@ struct MainWindowView: View {
                     systemImage: "square.and.pencil",
                     description: "Editing \(workflowID) is not implemented yet."
                 )
-            case let .workspace(moduleID):
-                workspaceView(for: moduleID)
             }
         }
         .navigationSplitViewStyle(.balanced)
