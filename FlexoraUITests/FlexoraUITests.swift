@@ -20,4 +20,15 @@ final class FlexoraUITests: XCTestCase {
         XCTAssertTrue(exportButton.exists)
         XCTAssertFalse(exportButton.isEnabled)
     }
+
+    func testExportPanelShowsThreeFormats() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-flexora-ui-sample-candidates", "1"]
+        app.launch()
+        app.buttons["Video Frame Extraction"].click()
+        app.buttons["Export"].click()
+        XCTAssertTrue(app.buttons["PNG"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["JPEG"].exists)
+        XCTAssertTrue(app.buttons["HEIC"].exists)
+    }
 }

@@ -1,13 +1,21 @@
+import OSLog
 import SwiftUI
 
 struct VideoFrameExtractionWorkspaceView: View {
+    let session: ToolSession?
+
     @StateObject private var importController = VideoImportController()
     @StateObject private var browserModel = ThumbnailBrowserViewModel()
+    @StateObject private var previewController = PreviewController()
+    @State private var exportSettings = VideoExportSettings()
+    @State private var isShowingExportOptions = false
 
     init(
+        session: ToolSession? = nil,
         importController: VideoImportController = VideoImportController(),
         browserModel: ThumbnailBrowserViewModel = ThumbnailBrowserViewModel()
     ) {
+        self.session = session
         _importController = StateObject(wrappedValue: importController)
         _browserModel = StateObject(wrappedValue: browserModel)
     }
@@ -21,7 +29,9 @@ struct VideoFrameExtractionWorkspaceView: View {
 
                 Spacer()
 
-                Button("Export") {}
+                Button("Export") {
+                    isShowingExportOptions = true
+                }
                     .disabled(browserModel.exportSelection.isEmpty)
                     .accessibilityIdentifier("video-export-button")
             }
@@ -46,6 +56,13 @@ struct VideoFrameExtractionWorkspaceView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(24)
+        .sheet(isPresented: $isShowingExportOptions) {
+            ExportOptionsView(
+                settings: $exportSettings,
+                onSelectFormat: handleExportSelection(_:)
+            )
+            .frame(minWidth: 360, minHeight: 240)
+        }
         .onChange(of: importController.importedVideoURL) { _, importedVideoURL in
             guard importedVideoURL != nil else {
                 browserModel.loadCandidates([])
@@ -59,6 +76,13 @@ struct VideoFrameExtractionWorkspaceView: View {
                 )
             )
         }
+    }
+
+    private func handleExportSelection(_ format: VideoExportFormat) {
+        exportSettings.format = format
+        session?.recordExport(fileNames: ["wallpaper.\(format.rawValue.lowercased())"])
+        AppLogger.export.info("Queued export using format \(format.rawValue, privacy: .public)")
+        isShowingExportOptions = false
     }
 
     private var candidateBrowser: some View {
@@ -89,6 +113,40 @@ struct VideoFrameExtractionWorkspaceView: View {
                 }
             }
         }
+    }
+}
+
+private struct ExportOptionsView: View {
+    @Binding var settings: VideoExportSettings
+    let onSelectFormat: (VideoExportFormat) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Export Options")
+                .font(.title2.weight(.semibold))
+
+            Picker("Wallpaper Fit", selection: $settings.fitMode) {
+                ForEach(WallpaperFitMode.allCases, id: \.self) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            Text("Choose Format")
+                .font(.headline)
+
+            HStack(spacing: 12) {
+                ForEach(VideoExportFormat.allCases, id: \.self) { format in
+                    Button(format.rawValue) {
+                        onSelectFormat(format)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+
+            Spacer()
+        }
+        .padding(24)
     }
 }
 
