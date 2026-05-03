@@ -28,6 +28,23 @@ struct ToolSessionTests {
         #expect(model.route == .moduleChooser)
         #expect(model.activeSession == nil)
     }
+
+    @MainActor
+    @Test func syncStateFromRuntimeClearsInactiveWorkspace() {
+        let runtime = ModuleRuntime()
+        let module = TestAppModule(id: "video")
+        let model = AppModel(runtime: runtime)
+
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
+        model.openModule(withID: "video")
+
+        runtime.setModuleEnabled("video", isEnabled: false)
+        model.syncStateFromRuntime()
+
+        #expect(model.route == .moduleChooser)
+        #expect(model.activeSession == nil)
+    }
 }
 
 private final class TestAppModule: ToolModule {

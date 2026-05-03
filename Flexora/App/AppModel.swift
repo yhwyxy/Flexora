@@ -17,4 +17,17 @@ public final class AppModel {
         activeSession = ToolSession(moduleID: id)
         route = .workspace(moduleID: id)
     }
+
+    public func syncStateFromRuntime() {
+        guard let activeModuleID = runtime.activeModuleID else {
+            activeSession = nil
+            route = .moduleChooser
+            return
+        }
+
+        if activeSession?.moduleID != activeModuleID {
+            activeSession = ToolSession(moduleID: activeModuleID)
+            route = .workspace(moduleID: activeModuleID)
+        }
+    }
 }

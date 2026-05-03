@@ -46,6 +46,21 @@ struct ModuleRuntimeTests {
         #expect(secondModule.unloadCallCount == 0)
         #expect(runtime.activeModuleID == "audio")
     }
+
+    @Test func reactivatingActiveModuleIsIdempotent() {
+        let runtime = ModuleRuntime()
+        let module = TestModule(id: "video")
+
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
+
+        _ = runtime.activateModule(withID: "video")
+        _ = runtime.activateModule(withID: "video")
+
+        #expect(module.loadCallCount == 1)
+        #expect(module.unloadCallCount == 0)
+        #expect(runtime.activeModuleID == "video")
+    }
 }
 
 private final class TestModule: ToolModule {
