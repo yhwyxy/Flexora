@@ -3,6 +3,6 @@ import Testing
 
 struct ModuleRuntimeTests {
     @Test func smoke() {
-        #expect(true)
+        #expect(ContentView.placeholderTitle == "Choose a Module")
     }
 }

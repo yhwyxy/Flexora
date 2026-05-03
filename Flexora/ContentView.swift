@@ -8,7 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
+    static let placeholderTitle = "Choose a Module"
+
     var body: some View {
-        Text("Choose a Module")
+        Text(Self.placeholderTitle)
+            .accessibilityIdentifier("module-chooser-placeholder")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
