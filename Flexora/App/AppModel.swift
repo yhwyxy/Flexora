@@ -13,7 +13,7 @@ public final class AppModel: ObservableObject {
     public init(
         runtime: ModuleRuntime,
         workflowStore: WorkflowStore? = nil,
-        route: AppRoute = .moduleChooser
+        route: AppRoute = .modules
     ) {
         self.runtime = runtime
         self.workflowStore = workflowStore ?? WorkflowStore()
@@ -62,22 +62,17 @@ public final class AppModel: ObservableObject {
     public func syncStateFromRuntime() {
         syncDefaultWorkflows()
 
-        if let workflowID = route.workflowID {
-            if route.isWorkflowEditor {
-                activeSession = nil
-            } else {
-                activeSession = activeSession(forWorkflowID: workflowID)
-            }
-            return
-        }
-
-        guard let activeModuleID = runtime.activeModuleID else {
+        guard route.isWorkflowEditor == false else {
             activeSession = nil
             return
         }
 
-        route = .task(workflowID: AppRoute.defaultWorkflowID(forModuleID: activeModuleID))
-        activeSession = activeSession(forWorkflowID: AppRoute.defaultWorkflowID(forModuleID: activeModuleID))
+        guard let workflowID = route.workflowID else {
+            activeSession = nil
+            return
+        }
+
+        activeSession = activeSession(forWorkflowID: workflowID)
     }
 
     public func setModuleEnabled(_ id: String, isEnabled: Bool) {

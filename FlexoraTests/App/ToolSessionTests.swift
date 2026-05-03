@@ -4,6 +4,23 @@ import SwiftUI
 
 @MainActor
 struct ToolSessionTests {
+    @Test func workflowFirstTopLevelRoutesAreDistinct() {
+        #expect(AppRoute.home != .moduleChooser)
+        #expect(AppRoute.workshop != .moduleChooser)
+        #expect(AppRoute.modules != .moduleChooser)
+        #expect(AppRoute.home != .workshop)
+        #expect(AppRoute.home != .modules)
+        #expect(AppRoute.workshop != .modules)
+        #expect(AppRoute.home.topLevelRoute == AppRoute.TopLevelRoute.home)
+        #expect(AppRoute.workshop.topLevelRoute == AppRoute.TopLevelRoute.workshop)
+        #expect(AppRoute.modules.topLevelRoute == AppRoute.TopLevelRoute.modules)
+    }
+
+    @Test func taskRouteRetainsWorkflowIdentityForDefaultWorkflow() {
+        #expect(AppRoute.task(workflowID: "module.video.default") != .workspace(moduleID: "video"))
+        #expect(AppRoute.task(workflowID: "module.video.default").workflowID == "module.video.default")
+    }
+
     @Test func openingModuleRoutesToDefaultWorkflowTask() {
         let runtime = ModuleRuntime()
         let store = WorkflowStore()
@@ -133,7 +150,23 @@ struct ToolSessionTests {
         ])
     }
 
-    @Test func initSynchronizesWithActiveRuntimeModuleAndDefaultWorkflow() {
+    @Test func syncStateFromRuntimeDoesNotForceRouteFromTopLevelNavigation() {
+        let runtime = ModuleRuntime()
+        let store = WorkflowStore()
+        let module = TestAppModule(id: "video")
+        let model = AppModel(runtime: runtime, workflowStore: store, route: .home)
+
+        runtime.register(module: module)
+        runtime.setModuleEnabled("video", isEnabled: true)
+        runtime.activateModule(withID: "video")
+        model.syncStateFromRuntime()
+
+        #expect(model.route == .home)
+        #expect(model.activeSession == nil)
+        #expect(store.workflows.map(\.id) == ["module.video.default"])
+    }
+
+    @Test func initSynchronizesWorkflowsWithoutForcingTaskRoute() {
         let runtime = ModuleRuntime()
         let store = WorkflowStore()
         let module = TestAppModule(id: "video")
@@ -142,10 +175,10 @@ struct ToolSessionTests {
         runtime.setModuleEnabled("video", isEnabled: true)
         runtime.activateModule(withID: "video")
 
-        let model = AppModel(runtime: runtime, workflowStore: store)
+        let model = AppModel(runtime: runtime, workflowStore: store, route: .modules)
 
-        #expect(model.route == .task(workflowID: "module.video.default"))
-        #expect(model.activeSession?.moduleID == "video")
+        #expect(model.route == .modules)
+        #expect(model.activeSession == nil)
         #expect(store.workflows.map(\.id) == ["module.video.default"])
     }
 }
