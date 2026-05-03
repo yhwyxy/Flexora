@@ -4,6 +4,7 @@ final class VideoFrameExtractionModule: ToolModule {
     let descriptor = ModuleDescriptor(
         id: "video-frame-extraction",
         name: "Video Frame Extraction",
+        summary: "Extract strong still frames from a video and export selected shots.",
         capabilities: [.workspace]
     )
 

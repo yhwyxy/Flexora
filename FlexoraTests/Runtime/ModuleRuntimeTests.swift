@@ -74,6 +74,7 @@ private final class TestModule: ToolModule {
         descriptor = ModuleDescriptor(
             id: id,
             name: name ?? id.capitalized,
+            summary: "\(name ?? id.capitalized) summary",
             capabilities: []
         )
     }
