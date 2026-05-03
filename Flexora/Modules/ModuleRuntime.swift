@@ -1,4 +1,5 @@
 public final class ModuleRuntime {
+    public var onActiveModuleChange: ((String?) -> Void)?
     public private(set) var registeredModules: [String: ToolModule] = [:]
     public private(set) var enabledModuleIDs: Set<String> = []
     public private(set) var activeModuleID: String?
@@ -27,6 +28,7 @@ public final class ModuleRuntime {
         if activeModuleID == id {
             registeredModules[id]?.unload()
             activeModuleID = nil
+            onActiveModuleChange?(nil)
         }
     }
 
@@ -46,6 +48,7 @@ public final class ModuleRuntime {
 
         module.load()
         activeModuleID = id
+        onActiveModuleChange?(id)
         return module
     }
 }

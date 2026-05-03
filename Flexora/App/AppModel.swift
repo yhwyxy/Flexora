@@ -7,6 +7,9 @@ public final class AppModel {
     public init(runtime: ModuleRuntime, route: AppRoute = .moduleChooser) {
         self.runtime = runtime
         self.route = route
+        self.runtime.onActiveModuleChange = { [weak self] activeModuleID in
+            self?.applyRuntimeState(activeModuleID: activeModuleID)
+        }
     }
 
     public func openModule(withID id: String) {
@@ -14,12 +17,19 @@ public final class AppModel {
             return
         }
 
-        activeSession = ToolSession(moduleID: id)
+        if activeSession?.moduleID != id {
+            activeSession = ToolSession(moduleID: id)
+        }
+
         route = .workspace(moduleID: id)
     }
 
     public func syncStateFromRuntime() {
-        guard let activeModuleID = runtime.activeModuleID else {
+        applyRuntimeState(activeModuleID: runtime.activeModuleID)
+    }
+
+    private func applyRuntimeState(activeModuleID: String?) {
+        guard let activeModuleID else {
             activeSession = nil
             route = .moduleChooser
             return
@@ -27,7 +37,8 @@ public final class AppModel {
 
         if activeSession?.moduleID != activeModuleID {
             activeSession = ToolSession(moduleID: activeModuleID)
-            route = .workspace(moduleID: activeModuleID)
         }
+
+        route = .workspace(moduleID: activeModuleID)
     }
 }
