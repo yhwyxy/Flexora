@@ -4,54 +4,113 @@ import SwiftUI
 @MainActor
 public final class AppModel: ObservableObject {
     public let runtime: ModuleRuntime
+    public let workflowStore: WorkflowStore
     @Published public var route: AppRoute
     @Published public private(set) var activeSession: ToolSession?
     private var runtimeCancellable: AnyCancellable?
+    private var workflowStoreCancellable: AnyCancellable?
 
-    public init(runtime: ModuleRuntime, route: AppRoute = .moduleChooser) {
+    public init(
+        runtime: ModuleRuntime,
+        workflowStore: WorkflowStore? = nil,
+        route: AppRoute = .moduleChooser
+    ) {
         self.runtime = runtime
+        self.workflowStore = workflowStore ?? WorkflowStore()
         self.route = route
         self.runtimeCancellable = runtime.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }
-        self.runtime.onActiveModuleChange = { [weak self] activeModuleID in
-            self?.applyRuntimeState(activeModuleID: activeModuleID)
+        self.workflowStoreCancellable = self.workflowStore.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
         }
-        applyRuntimeState(activeModuleID: runtime.activeModuleID)
+        self.runtime.onActiveModuleChange = { [weak self] _ in
+            self?.syncStateFromRuntime()
+        }
+        syncStateFromRuntime()
     }
 
     public func openModule(withID id: String) {
-        guard runtime.activateModule(withID: id) != nil else {
+        syncDefaultWorkflows()
+        let workflowID = AppRoute.defaultWorkflowID(forModuleID: id)
+
+        guard workflowStore.workflows.contains(where: { $0.id == workflowID }) else {
             return
         }
 
-        if activeSession?.moduleID != id {
-            activeSession = ToolSession(moduleID: id)
+        openWorkflow(withID: workflowID)
+    }
+
+    public func openWorkflow(withID workflowID: String) {
+        guard workflowStore.workflows.contains(where: { $0.id == workflowID }) else {
+            return
         }
 
-        route = .workspace(moduleID: id)
+        route = .task(workflowID: workflowID)
+        activeSession = activeSession(forWorkflowID: workflowID)
+    }
+
+    public func editWorkflow(withID workflowID: String) {
+        guard workflowStore.workflows.contains(where: { $0.id == workflowID }) else {
+            return
+        }
+
+        route = .workflowEditor(workflowID: workflowID)
+        activeSession = nil
     }
 
     public func syncStateFromRuntime() {
-        applyRuntimeState(activeModuleID: runtime.activeModuleID)
+        syncDefaultWorkflows()
+
+        if let workflowID = route.workflowID {
+            if route.isWorkflowEditor {
+                activeSession = nil
+            } else {
+                activeSession = activeSession(forWorkflowID: workflowID)
+            }
+            return
+        }
+
+        guard let activeModuleID = runtime.activeModuleID else {
+            activeSession = nil
+            return
+        }
+
+        route = .task(workflowID: AppRoute.defaultWorkflowID(forModuleID: activeModuleID))
+        activeSession = activeSession(forWorkflowID: AppRoute.defaultWorkflowID(forModuleID: activeModuleID))
     }
 
     public func setModuleEnabled(_ id: String, isEnabled: Bool) {
         runtime.setModuleEnabled(id, isEnabled: isEnabled)
-        applyRuntimeState(activeModuleID: runtime.activeModuleID)
+        syncStateFromRuntime()
     }
 
-    private func applyRuntimeState(activeModuleID: String?) {
-        guard let activeModuleID else {
-            activeSession = nil
-            route = .moduleChooser
-            return
+    private func syncDefaultWorkflows() {
+        workflowStore.synchronizeDefaultWorkflows(with: runtime)
+    }
+
+    private func activeSession(forWorkflowID workflowID: String) -> ToolSession? {
+        guard let workflow = workflowStore.workflows.first(where: { $0.id == workflowID }) else {
+            return nil
         }
 
-        if activeSession?.moduleID != activeModuleID {
-            activeSession = ToolSession(moduleID: activeModuleID)
+        let moduleIDs = Array(Set(workflow.nodes.map(\.moduleID))).sorted()
+        guard moduleIDs.count == 1, let moduleID = moduleIDs.first else {
+            return nil
         }
 
-        route = .workspace(moduleID: activeModuleID)
+        guard
+            let module = runtime.module(withID: moduleID),
+            module.descriptor.capabilities.contains(.workspace),
+            runtime.activateModule(withID: moduleID) != nil
+        else {
+            return nil
+        }
+
+        if activeSession?.moduleID == moduleID {
+            return activeSession
+        }
+
+        return ToolSession(moduleID: moduleID)
     }
 }
