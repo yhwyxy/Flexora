@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 struct WorkflowStoreTests {
-    @Test func createsOneDefaultWorkflowPerEnabledModule() {
+    @Test func createsOneDefaultWorkflowPerRegisteredModule() throws {
         let runtime = ModuleRuntime()
         runtime.register(module: TestWorkflowModule(
             id: "audio",
@@ -17,7 +17,6 @@ struct WorkflowStoreTests {
             summary: "Find strong still frames from a video."
         ))
         runtime.setModuleEnabled("audio", isEnabled: true)
-        runtime.setModuleEnabled("video", isEnabled: true)
 
         let store = WorkflowStore()
         store.synchronizeDefaultWorkflows(with: runtime)
@@ -34,7 +33,11 @@ struct WorkflowStoreTests {
             "Extract an audio track from a source clip.",
             "Find strong still frames from a video.",
         ])
-        #expect(store.workflows.allSatisfy { $0.availability == .available })
+
+        let audioWorkflow = try #require(store.workflows.first { $0.id == "module.audio.default" })
+        let videoWorkflow = try #require(store.workflows.first { $0.id == "module.video.default" })
+        #expect(store.availability(for: audioWorkflow, with: runtime) == .available)
+        #expect(store.availability(for: videoWorkflow, with: runtime) == .unavailable(requiredModuleIDs: ["video"]))
     }
 
     @Test func synchronizeDefaultWorkflowsDoesNotDuplicateExistingDefaults() {
@@ -54,7 +57,37 @@ struct WorkflowStoreTests {
         #expect(store.workflows.first?.id == "module.video.default")
     }
 
-    @Test func disabledModuleWorkflowRemainsVisibleButUnavailable() {
+    @Test func synchronizeDefaultWorkflowsRemovesStaleDefaultWorkflows() {
+        let initialRuntime = ModuleRuntime()
+        initialRuntime.register(module: TestWorkflowModule(
+            id: "audio",
+            name: "Audio Extraction",
+            summary: "Extract an audio track from a source clip."
+        ))
+        initialRuntime.register(module: TestWorkflowModule(
+            id: "video",
+            name: "Video Frame Extraction",
+            summary: "Find strong still frames from a video."
+        ))
+        initialRuntime.setModuleEnabled("audio", isEnabled: true)
+        initialRuntime.setModuleEnabled("video", isEnabled: true)
+
+        let updatedRuntime = ModuleRuntime()
+        updatedRuntime.register(module: TestWorkflowModule(
+            id: "video",
+            name: "Video Frame Extraction",
+            summary: "Find strong still frames from a video."
+        ))
+        updatedRuntime.setModuleEnabled("video", isEnabled: true)
+
+        let store = WorkflowStore()
+        store.synchronizeDefaultWorkflows(with: initialRuntime)
+        store.synchronizeDefaultWorkflows(with: updatedRuntime)
+
+        #expect(store.workflows.map(\.id) == ["module.video.default"])
+    }
+
+    @Test func disabledModuleWorkflowRemainsVisibleButUnavailable() throws {
         let runtime = ModuleRuntime()
         runtime.register(module: TestWorkflowModule(
             id: "video",
@@ -70,7 +103,42 @@ struct WorkflowStoreTests {
         store.synchronizeDefaultWorkflows(with: runtime)
 
         #expect(store.workflows.count == 1)
-        #expect(store.workflows.first?.availability == .unavailable(requiredModuleIDs: ["video"]))
+        let workflow = try #require(store.workflows.first)
+        #expect(store.availability(for: workflow, with: runtime) == .unavailable(requiredModuleIDs: ["video"]))
+    }
+
+    @Test func availabilityIsDerivedFromCurrentRuntime() throws {
+        let runtime = ModuleRuntime()
+        runtime.register(module: TestWorkflowModule(
+            id: "video-frame-extraction",
+            name: "Video Frame Extraction",
+            summary: "Find strong still frames from a video."
+        ))
+        runtime.setModuleEnabled("video-frame-extraction", isEnabled: true)
+
+        let store = WorkflowStore()
+        store.save(
+            WorkflowRecord(
+                id: "workflow.video-storyboard",
+                title: "Video Storyboard",
+                summary: "Generate a storyboard from a clip.",
+                source: .userAuthored,
+                tags: [
+                    WorkflowTagRecord(id: "video", name: "Video"),
+                ],
+                nodes: [
+                    WorkflowNode(id: "video-node", moduleID: "video-frame-extraction", title: "Frame Extractor"),
+                ],
+                connections: []
+            )
+        )
+
+        let workflow = try #require(store.workflows.first)
+        #expect(store.availability(for: workflow, with: runtime) == .available)
+
+        runtime.setModuleEnabled("video-frame-extraction", isEnabled: false)
+
+        #expect(store.availability(for: workflow, with: runtime) == .unavailable(requiredModuleIDs: ["video-frame-extraction"]))
     }
 
     @Test func libraryQueryFiltersAndGroupsByTag() {
@@ -88,8 +156,7 @@ struct WorkflowStoreTests {
                 nodes: [
                     WorkflowNode(id: "video-node", moduleID: "video-frame-extraction", title: "Frame Extractor"),
                 ],
-                connections: [],
-                availability: .available
+                connections: []
             )
         )
         store.save(
@@ -105,8 +172,7 @@ struct WorkflowStoreTests {
                 nodes: [
                     WorkflowNode(id: "video-node", moduleID: "video-frame-extraction", title: "Frame Extractor"),
                 ],
-                connections: [],
-                availability: .available
+                connections: []
             )
         )
         store.save(
@@ -121,8 +187,7 @@ struct WorkflowStoreTests {
                 nodes: [
                     WorkflowNode(id: "audio-node", moduleID: "audio-extraction", title: "Audio Extractor"),
                 ],
-                connections: [],
-                availability: .available
+                connections: []
             )
         )
 

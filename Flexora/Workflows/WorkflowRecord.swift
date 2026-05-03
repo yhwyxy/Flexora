@@ -6,7 +6,6 @@ public struct WorkflowRecord: Equatable, Identifiable, Sendable {
     public var tags: [WorkflowTagRecord]
     public var nodes: [WorkflowNode]
     public var connections: [WorkflowConnection]
-    public var availability: WorkflowAvailability
 
     public init(
         id: String,
@@ -15,8 +14,7 @@ public struct WorkflowRecord: Equatable, Identifiable, Sendable {
         source: WorkflowSource,
         tags: [WorkflowTagRecord],
         nodes: [WorkflowNode],
-        connections: [WorkflowConnection],
-        availability: WorkflowAvailability
+        connections: [WorkflowConnection]
     ) {
         self.id = id
         self.title = title
@@ -25,6 +23,5 @@ public struct WorkflowRecord: Equatable, Identifiable, Sendable {
         self.tags = tags
         self.nodes = nodes
         self.connections = connections
-        self.availability = availability
     }
 }

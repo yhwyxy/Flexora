@@ -13,15 +13,29 @@ public final class WorkflowStore: ObservableObject {
     }
 
     public func synchronizeDefaultWorkflows(with runtime: ModuleRuntime) {
-        for descriptor in runtime.availableModules {
-            upsert(defaultWorkflow(for: descriptor))
+        let moduleDescriptors = runtime.allModules
+        let registeredModuleIDs = Set(moduleDescriptors.map(\.id))
+
+        var reconciledWorkflows = workflows.filter { workflow in
+            switch workflow.source {
+            case .moduleDefault(let moduleID):
+                return registeredModuleIDs.contains(moduleID)
+            case .userAuthored:
+                return true
+            }
         }
 
-        workflows = Self.sorted(workflows.map { workflow in
-            var workflow = workflow
-            workflow.availability = availability(for: workflow, runtime: runtime)
-            return workflow
-        })
+        for descriptor in moduleDescriptors {
+            let workflow = defaultWorkflow(for: descriptor)
+
+            if let index = reconciledWorkflows.firstIndex(where: { $0.id == workflow.id }) {
+                reconciledWorkflows[index] = workflow
+            } else {
+                reconciledWorkflows.append(workflow)
+            }
+        }
+
+        workflows = Self.sorted(reconciledWorkflows)
     }
 
     public func library(filteringByTagID tagID: String? = nil) -> WorkflowLibrary {
@@ -54,6 +68,17 @@ public final class WorkflowStore: ObservableObject {
         return WorkflowLibrary(workflows: filteredWorkflows, sections: sections)
     }
 
+    public func availability(for workflow: WorkflowRecord, with runtime: ModuleRuntime) -> WorkflowAvailability {
+        let requiredModuleIDs = Array(Set(workflow.nodes.map(\.moduleID))).sorted()
+        let unavailableModuleIDs = requiredModuleIDs.filter { !runtime.isModuleEnabled($0) }
+
+        guard unavailableModuleIDs.isEmpty else {
+            return .unavailable(requiredModuleIDs: unavailableModuleIDs)
+        }
+
+        return .available
+    }
+
     private func upsert(_ workflow: WorkflowRecord) {
         if let index = workflows.firstIndex(where: { $0.id == workflow.id }) {
             workflows[index] = workflow
@@ -78,20 +103,8 @@ public final class WorkflowStore: ObservableObject {
                     title: descriptor.name
                 ),
             ],
-            connections: [],
-            availability: .available
+            connections: []
         )
-    }
-
-    private func availability(for workflow: WorkflowRecord, runtime: ModuleRuntime) -> WorkflowAvailability {
-        let requiredModuleIDs = Array(Set(workflow.nodes.map(\.moduleID))).sorted()
-        let unavailableModuleIDs = requiredModuleIDs.filter { !runtime.isModuleEnabled($0) }
-
-        guard unavailableModuleIDs.isEmpty else {
-            return .unavailable(requiredModuleIDs: unavailableModuleIDs)
-        }
-
-        return .available
     }
 
     private func groupedSections(for workflows: [WorkflowRecord]) -> [WorkflowLibrary.Section] {
