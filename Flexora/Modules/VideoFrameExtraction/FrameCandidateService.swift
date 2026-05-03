@@ -21,7 +21,7 @@ struct FrameCandidateService {
 
         for timeValue in times {
             let time = timeValue.timeValue
-            let image = try generator.copyCGImage(at: time, actualTime: nil)
+            let (image, _) = try await generator.image(at: time)
             let scoreSeed = Self.quickDifferenceSeed(from: image)
             samples.append(VideoFrameSample(time: time.seconds, scoreSeed: scoreSeed))
         }
