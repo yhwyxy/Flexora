@@ -2,3 +2,16 @@
 .superpowers/
 DerivedData/
 Flexora.xcodeproj/xcuserdata/
+
+# Build artifacts
+*.xcuserstate
+*.xcscmblueprint
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# macOS
+.DS_Store
+*.swp
+*~
