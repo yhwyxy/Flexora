@@ -1,3 +1,4 @@
+import AppKit
 import OSLog
 import SwiftUI
 
@@ -11,6 +12,7 @@ struct VideoFrameExtractionWorkspaceView: View {
     @State private var isShowingExportOptions = false
     @State private var isAnalyzingCandidates = false
     @State private var analysisErrorMessage: String?
+    @State private var exportErrorMessage: String?
 
     init(
         session: ToolSession? = nil,
@@ -38,7 +40,7 @@ struct VideoFrameExtractionWorkspaceView: View {
                     .accessibilityIdentifier("video-export-button")
 
                 Button("Preview") {
-                    previewController.toggleLargePreview()
+                    togglePreviewIfPossible()
                 }
                 .keyboardShortcut(.space, modifiers: [])
                 .disabled(focusedCandidate == nil)
@@ -50,6 +52,8 @@ struct VideoFrameExtractionWorkspaceView: View {
                 }
 
                 importController.importVideo(firstSupportedURL)
+            } onActivate: {
+                importController.promptForVideoImport()
             }
 
             if let importedVideoURL = importController.importedVideoURL {
@@ -64,6 +68,7 @@ struct VideoFrameExtractionWorkspaceView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(24)
+        .background(spacePreviewToggleLayer)
         .sheet(isPresented: $isShowingExportOptions) {
             ExportOptionsView(
                 settings: $exportSettings,
@@ -71,9 +76,18 @@ struct VideoFrameExtractionWorkspaceView: View {
             )
             .frame(minWidth: 360, minHeight: 240)
         }
-        .sheet(isPresented: $previewController.isShowingLargePreview) {
-            LargePreviewView(candidate: focusedCandidate)
-                .frame(minWidth: 560, minHeight: 420)
+        .sheet(isPresented: isShowingLargePreview) {
+            LargePreviewView(candidate: focusedCandidate) {
+                previewController.dismissLargePreview()
+            }
+            .frame(minWidth: 960, minHeight: 640)
+        }
+        .alert("Export Failed", isPresented: isShowingExportError) {
+            Button("OK") {
+                exportErrorMessage = nil
+            }
+        } message: {
+            Text(exportErrorMessage ?? "")
         }
         .onChange(of: importController.importedVideoURL) { _, importedVideoURL in
             guard let importedVideoURL else {
@@ -110,13 +124,106 @@ struct VideoFrameExtractionWorkspaceView: View {
 
     private func handleExportSelection(_ format: VideoExportFormat) {
         exportSettings.format = format
-        session?.recordExport(fileNames: ["wallpaper.\(format.rawValue.lowercased())"])
-        AppLogger.export.info("Queued export using format \(format.rawValue, privacy: .public)")
         isShowingExportOptions = false
+
+        DispatchQueue.main.async {
+            exportSelectedCandidates()
+        }
+    }
+
+    private var isShowingExportError: Binding<Bool> {
+        Binding(
+            get: { exportErrorMessage != nil },
+            set: { if !$0 { exportErrorMessage = nil } }
+        )
+    }
+
+    private var isShowingLargePreview: Binding<Bool> {
+        Binding(
+            get: { previewController.isShowingLargePreview },
+            set: { isShowing in
+                if isShowing {
+                    previewController.presentLargePreview()
+                } else {
+                    previewController.dismissLargePreview()
+                }
+            }
+        )
+    }
+
+    private func exportSelectedCandidates() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Choose Export Folder"
+
+        guard panel.runModal() == .OK, let destinationURL = panel.url else {
+            return
+        }
+
+        let controller = ExportController()
+
+        do {
+            try controller.validateDestination(destinationURL)
+
+            let exportedURLs = try browserModel.exportSelection.enumerated().map { index, candidate in
+                guard let image = candidate.thumbnailImage else {
+                    throw ExportControllerError.missingFrameImage
+                }
+
+                let fileName = exportFileName(for: candidate, index: index)
+                return try controller.export(
+                    image: image,
+                    to: destinationURL,
+                    fileName: fileName,
+                    settings: exportSettings
+                )
+            }
+
+            session?.recordExport(fileNames: exportedURLs.map(\.lastPathComponent))
+            AppLogger.export.info("Exported \(exportedURLs.count, privacy: .public) frames")
+        } catch let error as ExportControllerError {
+            exportErrorMessage = controller.userFacingError(for: error)
+        } catch {
+            exportErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func exportFileName(for candidate: VideoFrameCandidate, index: Int) -> String {
+        let totalSeconds = Int(candidate.time.rounded())
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        return String(format: "wallpaper-%02d-%02d-%02d", index + 1, minutes, seconds)
+    }
+
+    private func togglePreviewIfPossible() {
+        guard focusedCandidate != nil else {
+            return
+        }
+
+        previewController.toggleLargePreview()
     }
 
     private var focusedCandidate: VideoFrameCandidate? {
         browserModel.candidates.first { $0.id == browserModel.focusedCandidateID }
+    }
+
+    private var spacePreviewToggleLayer: some View {
+        Group {
+            if !previewController.isShowingLargePreview && !isShowingExportOptions {
+                KeyPressHandler { keyCode in
+                    guard PreviewController.KeyPress(keyCode: keyCode) == .space else {
+                        return false
+                    }
+
+                    togglePreviewIfPossible()
+                    return true
+                }
+                .frame(width: 0, height: 0)
+            }
+        }
     }
 
     private var candidateBrowser: some View {
@@ -141,8 +248,8 @@ struct VideoFrameExtractionWorkspaceView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 16)], spacing: 16) {
+                ScrollView(.horizontal) {
+                    LazyHStack(alignment: .top, spacing: 16) {
                         ForEach(browserModel.candidates) { candidate in
                             CandidateThumbnailCard(
                                 candidate: candidate,
@@ -153,6 +260,7 @@ struct VideoFrameExtractionWorkspaceView: View {
                             )
                         }
                     }
+                    .padding(.bottom, 4)
                 }
             }
         }
@@ -161,37 +269,39 @@ struct VideoFrameExtractionWorkspaceView: View {
 
 private struct LargePreviewView: View {
     let candidate: VideoFrameCandidate?
+    let onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Still Preview")
-                .font(.title2.weight(.semibold))
+        GeometryReader { proxy in
+            ZStack {
+                Color.black.opacity(0.96)
+                    .ignoresSafeArea()
 
-            if let candidate {
-                ZStack(alignment: .bottomLeading) {
+                if let candidate {
                     previewImage(for: candidate)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(candidate.formattedTimestamp)
-                            .font(.system(size: 40, weight: .bold, design: .rounded))
-                        Text("Score \(candidate.score, format: .number.precision(.fractionLength(2)))")
-                            .font(.title3)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(24)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .padding(24)
+                        .frame(
+                            maxWidth: min(proxy.size.width - 48, 1600),
+                            maxHeight: max(proxy.size.height - 48, 420)
+                        )
+                        .shadow(color: .black.opacity(0.45), radius: 32, y: 18)
+                } else {
+                    ContentUnavailableView("No Frame Focused", systemImage: "photo")
+                        .foregroundStyle(.white, .secondary)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                }
-            } else {
-                ContentUnavailableView("No Frame Focused", systemImage: "photo")
             }
         }
-        .padding(24)
+        .background(
+            KeyPressHandler { keyCode in
+                switch PreviewController.KeyPress(keyCode: keyCode) {
+                case .space, .escape:
+                    onClose()
+                    return true
+                case .other:
+                    return false
+                }
+            }
+            .frame(width: 0, height: 0)
+        )
     }
 
     @ViewBuilder
@@ -201,16 +311,62 @@ private struct LargePreviewView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black.opacity(0.92))
+                .background(Color.black)
         } else {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.accentColor.opacity(0.32), Color(nsColor: .windowBackgroundColor)],
+                        colors: [Color.accentColor.opacity(0.32), Color.black.opacity(0.92)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
+        }
+    }
+}
+
+private struct KeyPressHandler: NSViewRepresentable {
+    let onKeyPress: (UInt16) -> Bool
+
+    func makeNSView(context: Context) -> KeyCatchingView {
+        let view = KeyCatchingView()
+        view.onKeyPress = onKeyPress
+        return view
+    }
+
+    func updateNSView(_ nsView: KeyCatchingView, context: Context) {
+        nsView.onKeyPress = onKeyPress
+        nsView.requestFirstResponder()
+    }
+}
+
+private final class KeyCatchingView: NSView {
+    var onKeyPress: (UInt16) -> Bool = { _ in false }
+
+    override var acceptsFirstResponder: Bool { true }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        requestFirstResponder()
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if onKeyPress(event.keyCode) {
+            return
+        }
+
+        super.keyDown(with: event)
+    }
+
+    func requestFirstResponder() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else {
+                return
+            }
+
+            if self.window?.firstResponder !== self {
+                self.window?.makeFirstResponder(self)
+            }
         }
     }
 }
@@ -292,6 +448,7 @@ private struct CandidateThumbnailCard: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(isFocused ? Color.accentColor : .clear, lineWidth: 2)
         }
+        .frame(width: 320)
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .onTapGesture(perform: onFocus)
     }
