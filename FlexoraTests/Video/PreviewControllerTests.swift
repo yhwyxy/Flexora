@@ -29,11 +29,21 @@ struct PreviewControllerTests {
         let controller = PreviewController()
         controller.presentLargePreview()
 
-        #expect(controller.handlePreviewKeyPress(.space))
+        #expect(controller.handleWorkspaceKeyPress(.space, hasFocusedCandidate: true))
         #expect(!controller.isShowingLargePreview)
 
         controller.presentLargePreview()
-        #expect(controller.handlePreviewKeyPress(.escape))
+        #expect(controller.handleWorkspaceKeyPress(.escape, hasFocusedCandidate: true))
+        #expect(!controller.isShowingLargePreview)
+    }
+
+    @Test func workspaceSpaceKeyOpensAndClosesPreviewWhenCandidateIsFocused() {
+        let controller = PreviewController()
+
+        #expect(controller.handleWorkspaceKeyPress(.space, hasFocusedCandidate: true))
+        #expect(controller.isShowingLargePreview)
+
+        #expect(controller.handleWorkspaceKeyPress(.space, hasFocusedCandidate: true))
         #expect(!controller.isShowingLargePreview)
     }
 
@@ -41,15 +51,30 @@ struct PreviewControllerTests {
         let controller = PreviewController()
         controller.presentLargePreview()
 
-        #expect(!controller.handlePreviewKeyPress(.other))
+        #expect(!controller.handleWorkspaceKeyPress(.other, hasFocusedCandidate: true))
         #expect(controller.isShowingLargePreview)
     }
 
     @Test func dismissalKeysAreIgnoredWhenPreviewIsHidden() {
         let controller = PreviewController()
 
-        #expect(!controller.handlePreviewKeyPress(.space))
-        #expect(!controller.handlePreviewKeyPress(.escape))
+        #expect(!controller.handleWorkspaceKeyPress(.escape, hasFocusedCandidate: true))
+        #expect(!controller.isShowingLargePreview)
+    }
+
+    @Test func previewSpaceKeyIsIgnoredWithoutFocusedCandidate() {
+        let controller = PreviewController()
+
+        #expect(!controller.handleWorkspaceKeyPress(.space, hasFocusedCandidate: false))
+        #expect(!controller.isShowingLargePreview)
+    }
+
+    @Test func resetDismissesVisiblePreview() {
+        let controller = PreviewController()
+        controller.presentLargePreview()
+
+        controller.reset()
+
         #expect(!controller.isShowingLargePreview)
     }
 }

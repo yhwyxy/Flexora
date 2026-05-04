@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct FileDropZone: View {
     let title: String
     var onDropURLs: ([URL]) -> Void = { _ in }
+    var onActivate: () -> Void = {}
 
     @State private var isTargeted = false
 
@@ -33,6 +34,7 @@ struct FileDropZone: View {
                 .padding(24)
             }
             .onDrop(of: [.fileURL], isTargeted: $isTargeted, perform: handleDrop(providers:))
+            .onTapGesture(perform: onActivate)
     }
 
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
@@ -42,11 +44,8 @@ struct FileDropZone: View {
         }
 
         for provider in providers {
-            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
-                guard
-                    let data = item as? Data,
-                    let url = URL(dataRepresentation: data, relativeTo: nil)
-                else {
+            provider.loadDataRepresentation(forTypeIdentifier: UTType.fileURL.identifier) { data, _ in
+                guard let url = Self.decodeFileURL(from: data) else {
                     return
                 }
 
@@ -57,5 +56,13 @@ struct FileDropZone: View {
         }
 
         return true
+    }
+
+    static func decodeFileURL(from data: Data?) -> URL? {
+        guard let data else {
+            return nil
+        }
+
+        return URL(dataRepresentation: data, relativeTo: nil)
     }
 }

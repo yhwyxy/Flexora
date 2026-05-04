@@ -77,8 +77,11 @@ struct VideoFrameExtractionWorkspaceView: View {
             .frame(minWidth: 360, minHeight: 240)
         }
         .sheet(isPresented: isShowingLargePreview) {
-            LargePreviewView(candidate: focusedCandidate) {
-                previewController.dismissLargePreview()
+            LargePreviewView(candidate: focusedCandidate) { keyPress in
+                previewController.handleWorkspaceKeyPress(
+                    keyPress,
+                    hasFocusedCandidate: focusedCandidate != nil
+                )
             }
             .frame(minWidth: 960, minHeight: 640)
         }
@@ -90,6 +93,8 @@ struct VideoFrameExtractionWorkspaceView: View {
             Text(exportErrorMessage ?? "")
         }
         .onChange(of: importController.importedVideoURL) { _, importedVideoURL in
+            previewController.reset()
+
             guard let importedVideoURL else {
                 browserModel.loadCandidates([])
                 analysisErrorMessage = nil
@@ -214,12 +219,10 @@ struct VideoFrameExtractionWorkspaceView: View {
         Group {
             if !previewController.isShowingLargePreview && !isShowingExportOptions {
                 KeyPressHandler { keyCode in
-                    guard PreviewController.KeyPress(keyCode: keyCode) == .space else {
-                        return false
-                    }
-
-                    togglePreviewIfPossible()
-                    return true
+                    previewController.handleWorkspaceKeyPress(
+                        PreviewController.KeyPress(keyCode: keyCode),
+                        hasFocusedCandidate: focusedCandidate != nil
+                    )
                 }
                 .frame(width: 0, height: 0)
             }
@@ -269,7 +272,7 @@ struct VideoFrameExtractionWorkspaceView: View {
 
 private struct LargePreviewView: View {
     let candidate: VideoFrameCandidate?
-    let onClose: () -> Void
+    let onKeyPress: (PreviewController.KeyPress) -> Bool
 
     var body: some View {
         GeometryReader { proxy in
@@ -292,13 +295,7 @@ private struct LargePreviewView: View {
         }
         .background(
             KeyPressHandler { keyCode in
-                switch PreviewController.KeyPress(keyCode: keyCode) {
-                case .space, .escape:
-                    onClose()
-                    return true
-                case .other:
-                    return false
-                }
+                onKeyPress(PreviewController.KeyPress(keyCode: keyCode))
             }
             .frame(width: 0, height: 0)
         )

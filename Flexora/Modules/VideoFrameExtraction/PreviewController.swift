@@ -34,6 +34,29 @@ final class PreviewController: ObservableObject {
         isShowingLargePreview.toggle()
     }
 
+    func reset() {
+        dismissLargePreview()
+    }
+
+    @discardableResult
+    func handleWorkspaceKeyPress(_ keyPress: KeyPress, hasFocusedCandidate: Bool) -> Bool {
+        if isShowingLargePreview {
+            return handlePreviewKeyPress(keyPress)
+        }
+
+        guard hasFocusedCandidate else {
+            return false
+        }
+
+        switch keyPress {
+        case .space:
+            presentLargePreview()
+            return true
+        case .escape, .other:
+            return false
+        }
+    }
+
     @discardableResult
     func handlePreviewKeyPress(_ keyPress: KeyPress) -> Bool {
         guard isShowingLargePreview else {
