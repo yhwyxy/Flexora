@@ -66,7 +66,3 @@ FlexoraUITests/                 # UI tests
 1. Create a directory under `Flexora/Modules/YourModule/`.
 2. Implement the `ToolModule` protocol with a `ModuleDescriptor` and `makeWorkspaceView(session:)`.
 3. Register the module in `FlexoraApp.swift` via `runtime.register(module:)`.
-
-## License
-
-Private project. All rights reserved.
